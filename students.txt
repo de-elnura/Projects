@@ -1,0 +1,9 @@
+
+Elnura, 11, 5
+Mohinur, 34, 6
+testbek, 34, 3
+Amirxon, 23, 3
+a, 2, 3
+testoy, 3, 5
+testgul, 4, 5
+testxon, 13, 3
