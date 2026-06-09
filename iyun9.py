@@ -48,3 +48,10 @@
 #     print(f"'{soz}' so'zining tarjimasi: {lugat[soz]}")
 # else:
 #     print("Bunda so'z yo'q")
+d
+finallyfds
+f
+df
+ZeroDivisionErrorfs
+ds
+f
