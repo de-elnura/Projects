@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}O'quvchilar Reytingi (Leaderboard) — SkillUp{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leaderboard-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+    }
+
+    /* 3D SHOOP-SUPA (PODIUM) STYLES */
+    .podium-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 1.25rem;
+        margin-bottom: 3rem;
+        padding: 0 1rem;
+    }
+
+    .podium-card {
+        background: #ffffff;
+        border-radius: 20px 20px 16px 16px;
+        text-align: center;
+        padding: 1.5rem 1rem 1rem 1rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+        border: 2px solid #e2e8f0;
+        position: relative;
+        transition: all 0.25s ease;
+        flex: 1;
+        max-width: 250px;
+    }
+
+    .podium-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 32px rgba(79, 70, 229, 0.15);
+    }
+
+    .podium-card-1 {
+        border-color: #f59e0b;
+        background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+        order: 2;
+        padding-top: 2rem;
+        transform: scale(1.06);
+    }
+
+    .podium-card-1:hover {
+        transform: scale(1.09) translateY(-6px);
+    }
+
+    .podium-card-2 {
+        border-color: #94a3b8;
+        order: 1;
+    }
+
+    .podium-card-3 {
+        border-color: #cd7f32;
+        order: 3;
+    }
+
+    .podium-avatar {
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 0.75rem auto;
+        display: block;
+        border: 3px solid white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .podium-avatar-1 {
+        width: 88px;
+        height: 88px;
+        border: 4px solid #f59e0b;
+    }
+
+    .crown-icon {
+        position: absolute;
+        top: -18px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 2rem;
+        color: #f59e0b;
+        filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.5));
+    }
+
+    .rank-number-badge {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.9rem;
+    }
+
+    .rank-1-badge { background: #f59e0b; color: white; }
+    .rank-2-badge { background: #94a3b8; color: white; }
+    .rank-3-badge { background: #cd7f32; color: white; }
+
+    .filter-btn-pill {
+        border-radius: 9999px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 0.5rem 1.25rem;
+        text-decoration: none;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+        background: #ffffff;
+        transition: all 0.2s;
+    }
+
+    .filter-btn-pill.active, .filter-btn-pill:hover {
+        background: #4f46e5;
+        color: white;
+        border-color: #4f46e5;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    .student-table-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 2px solid #e2e8f0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header Banner -->
+    <div class="leaderboard-hero">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-2">
+                    <i class="fa-solid fa-trophy me-1"></i> Respublika Miqyosidagi O'quvchilar Reytingi
+                </span>
+                <h1 class="display-6 fw-extrabold mb-1">Eng Faol O'quvchilar Reytingi</h1>
+                <p class="text-light opacity-75 mb-0 small" style="max-width: 650px;">
+                    Darslarga o'z vaqtida kelish (davomat), uy vazifalarini a'lo bajarish, darsdagi faollik, test natijalari va kitob mutolaasi orqali ball to'plagan <strong>{{ total_count }} nafar</strong> o'quvchi.
+                </p>
+            </div>
+            <div>
+                {% if user_rank %}
+                <div class="bg-white bg-opacity-10 border border-white border-opacity-25 px-4 py-3 rounded-4 backdrop-blur text-center">
+                    <div class="small text-uppercase fw-bold text-warning mb-1">Sizning Natijangiz</div>
+                    <div class="fs-4 fw-extrabold text-white">#{{ user_rank }}-o'rin</div>
+                    <div class="small text-light opacity-90">{{ user.total_xp }} XP &bull; 🪙 {{ user.edu_coins }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 🏆 TOP-3 SHOHSUPA (PODIUM) -->
+    {% if podium_students|length >= 3 and not search_q %}
+    <div class="podium-container">
+        
+        <!-- 2-O'RIN (KUMUSH) -->
+        {% with s2=podium_students.1 %}
+        <div class="podium-card podium-card-2">
+            <span class="rank-number-badge rank-2-badge mb-2">2</span>
+            <img src="{{ s2.avatar_url|default:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300' }}" alt="{{ s2.get_full_name }}" class="podium-avatar">
+            <h6 class="fw-bold text-dark mb-0 text-truncate">{{ s2.get_full_name|default:s2.username }}</h6>
+            <small class="text-muted d-block text-truncate mb-2" style="font-size: 0.75rem;">{{ s2.headline|default:"Faol Talaba" }}</small>
+            <div class="d-flex justify-content-center gap-1">
+                <span class="badge bg-warning bg-opacity-10 text-dark fw-bold border" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-bolt text-warning"></i> {{ s2.total_xp }} XP
+                </span>
+                <span class="badge bg-amber bg-opacity-10 text-dark fw-bold border" style="font-size: 0.75rem;">
+                    🪙 {{ s2.edu_coins }}
+                </span>
+            </div>
+        </div>
+        {% endwith %}
+
+        <!-- 1-O'RIN (OLTIN SHOHSUPA) -->
+        {% with s1=podium_students.0 %}
+        <div class="podium-card podium-card-1">
+            <i class="fa-solid fa-crown crown-icon"></i>
+            <span class="rank-number-badge rank-1-badge mb-2">1</span>
+            <img src="{{ s1.avatar_url|default:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300' }}" alt="{{ s1.get_full_name }}" class="podium-avatar podium-avatar-1">
+            <h5 class="fw-extrabold text-dark mb-0 text-truncate">{{ s1.get_full_name|default:s1.username }}</h5>
+            <small class="text-primary fw-semibold d-block text-truncate mb-2" style="font-size: 0.8rem;">{{ s1.headline|default:"Absolyut Yetakchi" }}</small>
+            <div class="d-flex justify-content-center gap-1 mb-1">
+                <span class="badge bg-warning text-dark fw-extrabold shadow-sm px-2.5 py-1" style="font-size: 0.85rem;">
+                    <i class="fa-solid fa-bolt"></i> {{ s1.total_xp }} XP
+                </span>
+                <span class="badge bg-dark text-warning fw-bold px-2.5 py-1" style="font-size: 0.85rem;">
+                    🪙 {{ s1.edu_coins }}
+                </span>
+            </div>
+            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill small">
+                <i class="fa-solid fa-award"></i> 1-o'rin Sohibi
+            </span>
+        </div>
+        {% endwith %}
+
+        <!-- 3-O'RIN (BRONZA) -->
+        {% with s3=podium_students.2 %}
+        <div class="podium-card podium-card-3">
+            <span class="rank-number-badge rank-3-badge mb-2">3</span>
+            <img src="{{ s3.avatar_url|default:'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=300' }}" alt="{{ s3.get_full_name }}" class="podium-avatar">
+            <h6 class="fw-bold text-dark mb-0 text-truncate">{{ s3.get_full_name|default:s3.username }}</h6>
+            <small class="text-muted d-block text-truncate mb-2" style="font-size: 0.75rem;">{{ s3.headline|default:"Faol Talaba" }}</small>
+            <div class="d-flex justify-content-center gap-1">
+                <span class="badge bg-warning bg-opacity-10 text-dark fw-bold border" style="font-size: 0.75rem;">
+                    <i class="fa-solid fa-bolt text-warning"></i> {{ s3.total_xp }} XP
+                </span>
+                <span class="badge bg-amber bg-opacity-10 text-dark fw-bold border" style="font-size: 0.75rem;">
+                    🪙 {{ s3.edu_coins }}
+                </span>
+            </div>
+        </div>
+        {% endwith %}
+
+    </div>
+    {% endif %}
+
+    <!-- FILTRLAR VA QIDIRUV -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <!-- Saralash tugmalari -->
+            <div class="d-flex flex-wrap gap-2">
+                <a href="?sort=xp{% if search_q %}&q={{ search_q }}{% endif %}" class="filter-btn-pill {% if sort_by == 'xp' %}active{% endif %}">
+                    <i class="fa-solid fa-bolt text-warning me-1"></i> XP Ballari Bo'yicha
+                </a>
+                <a href="?sort=coins{% if search_q %}&q={{ search_q }}{% endif %}" class="filter-btn-pill {% if sort_by == 'coins' %}active{% endif %}">
+                    <i class="fa-solid fa-coins text-warning me-1"></i> EduCoin Balansi Bo'yicha
+                </a>
+            </div>
+
+            <!-- Qidiruv formasi -->
+            <form method="GET" class="d-flex gap-2" style="min-width: 280px;">
+                <input type="hidden" name="sort" value="{{ sort_by }}">
+                <input type="text" name="q" class="form-control form-control-sm rounded-pill px-3" placeholder="O'quvchi ismi yoki familiyasi..." value="{{ search_q }}">
+                <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">
+                    <i class="fa-solid fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TALABALAR JADVALI -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4" style="width: 80px;">O'rin</th>
+                        <th>O'quvchi</th>
+                        <th>Yo'nalish / Maqsad</th>
+                        <th>So'nggi Erishgan Yutug'i (8 Harakat)</th>
+                        <th>Topshirilgan Testlar</th>
+                        <th>EduCoin</th>
+                        <th class="text-end pe-4">Umumiy XP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students_page %}
+                    <tr class="{% if student.id == user.id %}table-primary fw-bold{% endif %}">
+                        <td class="ps-4">
+                            {% with rank=students_page.start_index|add:forloop.counter0 %}
+                                {% if rank == 1 %}
+                                    <span class="rank-number-badge rank-1-badge"><i class="fa-solid fa-crown"></i></span>
+                                {% elif rank == 2 %}
+                                    <span class="rank-number-badge rank-2-badge">2</span>
+                                {% elif rank == 3 %}
+                                    <span class="rank-number-badge rank-3-badge">3</span>
+                                {% else %}
+                                    <span class="text-muted fw-bold ps-1">#{{ rank }}</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                {% if student.avatar_url %}
+                                    <img src="{{ student.avatar_url }}" alt="{{ student.get_full_name }}" class="student-table-avatar">
+                                {% else %}
+                                    <div class="student-table-avatar bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold">
+                                        {{ student.first_name|default:student.username|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div class="fw-bold text-dark">
+                                        {{ student.get_full_name|default:student.username }}
+                                        {% if student.id == user.id %}
+                                            <span class="badge bg-primary text-white ms-1 small">Siz</span>
+                                        {% endif %}
+                                        {% if student.has_vip_badge %}
+                                            <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;"><i class="fa-solid fa-crown"></i> VIP</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">@{{ student.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <small class="text-secondary fw-semibold">{{ student.headline|default:"Faol Talaba" }}</small>
+                        </td>
+                        <td>
+                            <!-- 8 xil amaliy faoliyat nishoni -->
+                            {% with last_tx=student.coin_transactions.first %}
+                                {% if last_tx %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill" style="font-size: 0.75rem;">
+                                        <i class="fa-solid fa-circle-check me-1"></i> {{ last_tx.description|truncatechars:35 }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border" style="font-size: 0.75rem;">
+                                        <i class="fa-solid fa-book-open me-1"></i> Uy vazifasi a'lo topshirildi
+                                    </span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                <i class="fa-solid fa-file-circle-check text-info me-1"></i> {{ student.quiz_results.count }} ta natija
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-amber bg-opacity-10 text-dark fw-bold border">
+                                🪙 {{ student.edu_coins }}
+                            </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <span class="xp-badge">
+                                <i class="fa-solid fa-bolt text-warning"></i>
+                                {{ student.total_xp }} XP
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-user-slash fa-2x mb-2"></i>
+                            <p class="mb-0">Qidiruv bo'yicha o'quvchilar topilmadi.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 📑 SAHIFALASH (PAGINATION) -->
+    {% if students_page.has_other_pages %}
+    <nav aria-label="Reyting sahifalari" class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="small text-muted">
+            Jami <strong>{{ total_count }}</strong> nafar o'quvchidan {{ students_page.start_index }}-{{ students_page.end_index }} ko'rsatilmoqda
+        </div>
+
+        <ul class="pagination pagination-sm mb-0">
+            {% if students_page.has_previous %}
+                <li class="page-item">
+                    <a class="page-link rounded-pill px-3 me-1" href="?page={{ students_page.previous_page_number }}&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}">
+                        &laquo; Oldingi
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link rounded-pill px-3 me-1">&laquo; Oldingi</span>
+                </li>
+            {% endif %}
+
+            {% for p_num in students_page.paginator.page_range %}
+                {% if p_num == students_page.number %}
+                    <li class="page-item active">
+                        <span class="page-link rounded-circle mx-1" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">{{ p_num }}</span>
+                    </li>
+                {% elif p_num >= students_page.number|add:"-2" and p_num <= students_page.number|add:"2" %}
+                    <li class="page-item">
+                        <a class="page-link rounded-circle mx-1" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" href="?page={{ p_num }}&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}">{{ p_num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if students_page.has_next %}
+                <li class="page-item">
+                    <a class="page-link rounded-pill px-3 ms-1" href="?page={{ students_page.next_page_number }}&sort={{ sort_by }}{% if search_q %}&q={{ search_q }}{% endif %}">
+                        Keyingi &raquo;
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link rounded-pill px-3 ms-1">Keyingi &raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}

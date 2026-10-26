@@ -1,0 +1,326 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    .admin-hero {
+        background: linear-gradient(135deg, #1e1b4b, #312e81, #4338ca);
+        color: #ffffff;
+        padding: 2rem 2.5rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 25px -5px rgba(49, 46, 129, 0.25);
+    }
+    .kpi-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        transition: transform 0.2s ease;
+    }
+    .kpi-card:hover {
+        transform: translateY(-2px);
+    }
+    .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+    .chart-container-box {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .recent-table th {
+        background: #f8fafc;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: #64748b;
+        padding: 0.75rem 1rem;
+    }
+    .recent-table td {
+        padding: 0.85rem 1rem;
+        font-size: 0.95rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .action-btn-custom {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.25rem;
+        background: #ffffff;
+        color: #1e1b4b;
+        font-weight: 700;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    .action-btn-custom:hover {
+        background: #fef08a;
+        color: #1e1b4b;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" style="padding: 1rem 0;">
+
+    <!-- 1. Xush kelibsiz Hero Banner -->
+    <div class="admin-hero">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span style="background: rgba(254, 240, 138, 0.2); color: #fde047; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 700;">
+                    <i class="fa-solid fa-crown me-1"></i> Boshqaruv Markazi (Ultra Pro Max)
+                </span>
+                <h1 style="font-size: 2.2rem; font-weight: 800; margin: 0.75rem 0 0.5rem 0; color: #ffffff;">
+                    Xush kelibsiz, Boshqaruvchi! 🎓
+                </h1>
+                <p style="color: #cbd5e1; font-size: 1.05rem; margin: 0; max-width: 650px;">
+                    EduQuiz & SkillUp ta'lim platformasi to'liq barqaror ishlamoqda. Talabalar o'zlashtirishi, to'lovlar monitoringi va yangi kurslar nazorati shu yerda jamlangan.
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="/admin/core/course/add/" class="action-btn-custom">
+                    <i class="fa-solid fa-plus text-primary"></i> Yangi Kurs
+                </a>
+                <a href="/admin/core/coupon/add/" class="action-btn-custom">
+                    <i class="fa-solid fa-ticket text-warning"></i> Yangi Promokod
+                </a>
+                <a href="/" target="_blank" class="action-btn-custom" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Saytga o'tish
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. KPI Ko'rsatkichlar Paneli (4 ta Vidjet) -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+        
+        <!-- Talabalar -->
+        <div class="kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Faol Talabalar</div>
+                    <div style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem;">
+                        54 nafar
+                    </div>
+                    <small style="color: #10b981; font-weight: 600;"><i class="fa-solid fa-arrow-trend-up"></i> +12% o'sish</small>
+                </div>
+                <div class="kpi-icon" style="background: #e0e7ff; color: #4338ca;">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kurslar va Darslar -->
+        <div class="kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Kurslar & Darslar</div>
+                    <div style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem;">
+                        13 kurs / 74 dars
+                    </div>
+                    <small style="color: #6366f1; font-weight: 600;"><i class="fa-solid fa-layer-group"></i> 7 ta soha bo'yicha</small>
+                </div>
+                <div class="kpi-icon" style="background: #fef3c7; color: #d97706;">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tushum (Demo Simulyatsiya) -->
+        <div class="kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Jami Tushum (Demo)</div>
+                    <div style="font-size: 1.85rem; font-weight: 800; color: #059669; margin-top: 0.25rem;">
+                        28,450,000 so'm
+                    </div>
+                    <small style="color: #059669; font-weight: 600;"><i class="fa-solid fa-credit-card"></i> Click, Payme, Uzum</small>
+                </div>
+                <div class="kpi-icon" style="background: #d1fae5; color: #059669;">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sertifikatlar -->
+        <div class="kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Berilgan Sertifikatlar</div>
+                    <div style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem;">
+                        18 ta
+                    </div>
+                    <small style="color: #eab308; font-weight: 600;"><i class="fa-solid fa-award"></i> 70%+ bitiruvchilar</small>
+                </div>
+                <div class="kpi-icon" style="background: #fefce8; color: #ca8a04;">
+                    <i class="fa-solid fa-certificate"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- EduCoin Gamifikatsiyasi -->
+        <div class="kpi-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">EduCoin & Kvestlar</div>
+                    <div style="font-size: 1.85rem; font-weight: 800; color: #b45309; margin-top: 0.25rem;">
+                        8 xil kvest
+                    </div>
+                    <small style="color: #d97706; font-weight: 600;"><i class="fa-solid fa-coins"></i> 1,800+ 🪙 muomalada</small>
+                </div>
+                <div class="kpi-icon" style="background: #fef3c7; color: #b45309;">
+                    <i class="fa-solid fa-coins"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Dinamik Grafiklar (Chart.js) -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- Chiziqli Grafik: Oylik Talabalar Dinamikasi -->
+        <div class="chart-container-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0; color: #1e293b;">
+                    <i class="fa-solid fa-chart-line text-primary me-2"></i> Talabalar Ro'yxatdan O'tish O'sishi (Oylar bo'yicha)
+                </h3>
+                <span style="font-size: 0.8rem; background: #f1f5f9; padding: 0.25rem 0.6rem; border-radius: 6px; color: #475569;">2026-yil</span>
+            </div>
+            <canvas id="growthChart" height="110"></canvas>
+        </div>
+
+        <!-- Doiraviy Grafik: Sohalar Taqsimoti -->
+        <div class="chart-container-box">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0 0 1rem 0; color: #1e293b;">
+                <i class="fa-solid fa-chart-pie text-warning me-2"></i> Yo'nalishlar Ulushi
+            </h3>
+            <canvas id="categoryChart" height="180"></canvas>
+        </div>
+    </div>
+
+    <!-- 4. So'nggi Xaridlar va To'lov Kvitansiyalari (Demo Tranzaksiyalar) -->
+    <div class="chart-container-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: #1e293b;">
+                <i class="fa-solid fa-receipt text-success me-2"></i> So'nggi Xaridlar va Kvitansiyalar
+            </h3>
+            <a href="/admin/core/enrollment/" style="font-size: 0.85rem; font-weight: 600; color: #4338ca; text-decoration: none;">
+                Barchasini ko'rish &rarr;
+            </a>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="recent-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr>
+                        <th>Kvitansiya ID</th>
+                        <th>Talaba</th>
+                        <th>Kurs</th>
+                        <th>To'lov Tizimi</th>
+                        <th>Summa</th>
+                        <th>Holati</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>TXN-4-1-8C91F2</code></td>
+                        <td><strong>Jasur Mahmudov</strong> (@jasur)</td>
+                        <td>Python Backend Masterclass</td>
+                        <td><span style="background: #e0e7ff; color: #3730a3; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">CLICK</span></td>
+                        <td style="color: #059669; font-weight: 700;">399,000 so'm</td>
+                        <td><span style="background: #d1fae5; color: #065f46; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 700;">✓ To'langan</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>TXN-3-2-B41E89</code></td>
+                        <td><strong>Sanjar Aliyev</strong> (@talaba)</td>
+                        <td>Figma va UI/UX Dizayn</td>
+                        <td><span style="background: #cffafe; color: #155e75; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">PAYME</span></td>
+                        <td style="color: #059669; font-weight: 700;">299,000 so'm</td>
+                        <td><span style="background: #d1fae5; color: #065f46; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 700;">✓ To'langan</span></td>
+                    </tr>
+                    <tr>
+                        <td><code>TXN-5-3-92A3C1</code></td>
+                        <td><strong>Malika Rustamova</strong> (@malika_dev)</td>
+                        <td>IELTS 8.0+ va Ingliz Tili</td>
+                        <td><span style="background: #f3e8ff; color: #6b21a8; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">UZUM</span></td>
+                        <td style="color: #059669; font-weight: 700;">249,000 so'm</td>
+                        <td><span style="background: #d1fae5; color: #065f46; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 700;">✓ To'langan</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 5. Standart Django Modellar Jadvali -->
+    <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 2rem 0 1rem 0;">
+        <i class="fa-solid fa-cubes text-primary me-2"></i> Ma'lumotlar Bazasi Modullari Boshqaruvi
+    </h3>
+
+    {% include "admin/app_list.html" with app_list=app_list %}
+
+</div>
+
+<!-- Chart.js Skriptlari -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. O'sish grafigi
+        const ctxGrowth = document.getElementById('growthChart').getContext('2d');
+        new Chart(ctxGrowth, {
+            type: 'line',
+            data: {
+                labels: ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr'],
+                datasets: [{
+                    label: 'Yangi Talabalar Soni',
+                    data: [12, 19, 28, 35, 48, 62, 78, 95, 120, 145],
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#4f46e5'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 2. Sohalar Doiraviy Grafigi
+        const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+        new Chart(ctxCategory, {
+            type: 'doughnut',
+            data: {
+                labels: ['Backend', 'Frontend', 'Dizayn', 'IELTS', 'Marketing', 'Biznes'],
+                datasets: [{
+                    data: [30, 22, 18, 15, 10, 5],
+                    backgroundColor: ['#4f46e5', '#0ea5e9', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

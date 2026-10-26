@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ category.name }} — Elnura's Flowers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .flower-card:hover img { transform: scale(1.08); }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast-animate {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-[#f7f8fc] font-sans text-gray-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header (Savat, Savdolarim va Profil bilan bir xil uslubda) -->
+    <header class="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between">
+            <a href="{% url 'home' %}" class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-2xl bg-[#7000ff] text-white flex items-center justify-center text-xl shadow-md shadow-purple-500/20">
+                    <i class="fa-solid fa-spa"></i>
+                </span>
+                <div class="flex flex-col">
+                    <span class="text-2xl font-black text-[#7000ff] tracking-tight leading-none">
+                        Elnura's <span class="text-rose-500 font-extrabold">Flowers</span>
+                    </span>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Online Gul Do'koni</span>
+                </div>
+            </a>
+
+            <!-- O'ng tomondagi tugmalar -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="{% url 'order_history' %}" class="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-[#7000ff] bg-gray-50 hover:bg-purple-50/60 px-3 py-2 rounded-xl border border-gray-200/80 transition">
+                    <i class="fa-solid fa-clock-rotate-left text-sm text-[#7000ff]"></i>
+                    <span class="hidden sm:inline">Savdolarim</span>
+                </a>
+
+                <a href="{% url 'profile_view' %}" class="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-[#7000ff] bg-gray-50 hover:bg-purple-50/60 px-3 py-2 rounded-xl border border-gray-200/80 transition">
+                    <i class="fa-solid fa-user text-sm text-[#7000ff]"></i>
+                    <span class="hidden sm:inline">Profil</span>
+                </a>
+
+                <!-- Savat tugmasi -->
+                <a href="{% url 'cart_view' %}" class="flex items-center gap-2 bg-[#7000ff] hover:bg-[#5b00d1] text-white px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold shadow-md shadow-purple-500/20 transition">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="hidden sm:inline">Savat</span>
+                    <span id="headerCartBadge" class="bg-white text-[#7000ff] px-1.5 py-0.2 rounded-full font-black text-[10px]">
+                        {{ cart_count|default:"0" }}
+                    </span>
+                </a>
+
+                <a href="{% url 'home' %}" class="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-xl transition">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span class="hidden md:inline">Orqaga</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tanlangan toifa sarlavhasi -->
+    <div class="max-w-7xl mx-auto px-4 pt-6 pb-2 w-full">
+        <div class="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <span class="text-[11px] font-bold text-[#7000ff] bg-purple-50 px-3 py-1.5 rounded-full uppercase tracking-wider">
+                    Kolleksiya
+                </span>
+                <h1 class="text-2xl md:text-3xl font-black text-gray-900 mt-2">
+                    {{ category.name }} — 5 Xil Sara Guldastalar
+                </h1>
+                <p class="text-xs text-gray-500 mt-1">
+                    Barcha gullar faqat yangi uzilgan, suvli maxsus idishlarda tezkor yetkazib beriladi
+                </p>
+            </div>
+
+            <div class="bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 shrink-0">
+                <i class="fa-solid fa-circle-check"></i> 5 xil nav sotuvda bor
+            </div>
+        </div>
+    </div>
+
+    <!-- 5 xil gul kartochkasi: Rasm, Nomi, Bahosi va Savatga qo'shish -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 items-stretch">
+            {% for flower in flowers %}
+            <div class="flower-card bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col justify-between h-full group">
+
+                <!-- Rasm qismi (To'liq bir xil 4:5 nisbat) -->
+                <div class="w-full aspect-[4/5] bg-gray-50 overflow-hidden relative">
+                    <img src="{{ flower.image_url }}" alt="{{ flower.title }}" class="w-full h-full object-cover object-center transition duration-500" loading="lazy">
+
+                    <!-- Yetkazib berish belgisi -->
+                    <div class="absolute bottom-2.5 left-2.5 bg-black/60 backdrop-blur-md text-white text-[10px] px-2.5 py-0.5 rounded-lg flex items-center gap-1 font-medium">
+                        <i class="fa-solid fa-truck text-emerald-400"></i> {{ flower.delivery_time }}
+                    </div>
+
+                    <!-- Bepul yetkazish belgisi -->
+                    {% if flower.delivery_price == 0 %}
+                    <div class="absolute top-2.5 right-2.5 bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm">
+                        Yetkazish bepul
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Ma'lumot qismi -->
+                <div class="p-4 flex flex-col flex-1 justify-between">
+                    <div>
+                        <div class="h-10 flex items-center mb-1">
+                            <h4 class="text-xs font-bold text-gray-900 leading-snug group-hover:text-[#7000ff] transition line-clamp-2">
+                                {{ flower.title }}
+                            </h4>
+                        </div>
+
+                        <!-- Baho va sharhlar -->
+                        <div class="flex items-center gap-1 text-[11px] text-gray-500 mt-1">
+                            <i class="fa-solid fa-star text-amber-400 text-[10px]"></i>
+                            <span class="font-bold text-gray-800">{{ flower.rating }}</span>
+                            <span>({{ flower.reviews_count }} sharh)</span>
+                        </div>
+
+                        <!-- Muddatli to'lov -->
+                        <div class="mt-2 inline-block bg-[#fff3bf] text-gray-900 text-[10px] font-black px-2 py-0.5 rounded-md border border-yellow-200">
+                            {{ flower.monthly_installment }} so'm/oy
+                        </div>
+                    </div>
+
+                    <!-- Narx va Savatga qo'shish tugmasi -->
+                    <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                        <div class="min-h-[36px] flex flex-col justify-center">
+                            {% if flower.old_price %}
+                                <span class="text-[10px] line-through text-gray-400 block leading-tight">
+                                    {{ flower.old_price }} so'm
+                                </span>
+                            {% else %}
+                                <span class="text-[10px] text-transparent block leading-tight select-none">-</span>
+                            {% endif %}
+                            <span class="text-sm font-black text-gray-900 block leading-tight">
+                                {{ flower.price }} so'm
+                            </span>
+                        </div>
+
+                        <!-- Savatchaga qo'shish interaktiv tugmasi -->
+                        <button onclick="addToCart(this, {{ flower.id }}, '{{ flower.title|escapejs }}')" 
+                                class="px-3.5 py-2 rounded-xl bg-[#7000ff] hover:bg-[#5b00d1] text-white flex items-center gap-1.5 hover:scale-105 active:scale-95 transition shadow-md shadow-purple-500/20 text-xs font-bold shrink-0">
+                            <i class="fa-solid fa-cart-plus"></i>
+                            <span>Savatga</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+            {% empty %}
+                <p class="col-span-full text-center text-gray-400 py-10">Ushbu turdagi gullar topilmadi.</p>
+            {% endfor %}
+        </div>
+    </main>
+
+    <!-- Bildirishnoma (Toast notification) -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden">
+        <div class="bg-gray-900/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-gray-800 flex items-center gap-4 text-xs toast-animate">
+            <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-bold">
+                <i class="fa-solid fa-check"></i>
+            </span>
+            <div>
+                <p id="toastMessage" class="font-bold text-gray-100">Guldasta savatga qo'shildi!</p>
+                <p class="text-[11px] text-gray-400">Buyurtmani rasmiylashtirish uchun savatga o'ting</p>
+            </div>
+            <a href="{% url 'cart_view' %}" class="ml-2 bg-[#7000ff] hover:bg-[#5b00d1] text-white px-3 py-1.5 rounded-xl font-bold text-[11px] transition">
+                Savatga o'tish →
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 py-6 text-center text-xs text-gray-400 mt-10">
+        Elnura's Flowers — Toshkent bo'ylab 1-2 soatda tezkor yetkazib berish
+    </footer>
+
+    <!-- JavaScript Mantiq: Savatga qo'shish va hisoblagichni yangilash -->
+    <script>
+        let toastTimeout = null;
+
+        function addToCart(button, flowerId, flowerTitle) {
+            const originalHtml = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            fetch('/savatga-qoshish/' + flowerId + '/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        // Headerdagi savat hisoblagichini yangilash
+                        const badge = document.getElementById('headerCartBadge');
+                        if (badge) {
+                            badge.innerText = data.cart_count;
+                            badge.classList.add('scale-125');
+                            setTimeout(() => badge.classList.remove('scale-125'), 300);
+                        }
+
+                        // Tugma holatini o'zgartirish
+                        button.innerHTML = '<i class="fa-solid fa-check text-emerald-300"></i> Qo\'shildi';
+                        button.classList.remove('bg-[#7000ff]');
+                        button.classList.add('bg-emerald-600');
+
+                        // Toast xabarini ko'rsatish
+                        showToast(`"${flowerTitle}" savatga qo'shildi!`);
+
+                        setTimeout(() => {
+                            button.innerHTML = originalHtml;
+                            button.classList.remove('bg-emerald-600');
+                            button.classList.add('bg-[#7000ff]');
+                            button.disabled = false;
+                        }, 1200);
+                    }
+                })
+                .catch(error => {
+                    console.error('Xatolik:', error);
+                    button.innerHTML = originalHtml;
+                    button.disabled = false;
+                });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            if (!toast) return;
+
+            toastMsg.innerText = message;
+            toast.classList.remove('hidden');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 4000);
+        }
+    </script>
+
+</body>
+</html>

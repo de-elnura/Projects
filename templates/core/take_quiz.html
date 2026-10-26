@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+
+{% block title %}Imtihon: {{ quiz.title }} — SkillUp{% endblock %}
+
+{% block extra_css %}
+<style>
+    .quiz-header-bar {
+        position: sticky;
+        top: 70px;
+        z-index: 1020;
+        background: #ffffff;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 0.85rem 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+
+    .timer-badge {
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        padding: 0.5rem 1.2rem;
+        border-radius: 12px;
+        background-color: #f1f5f9;
+        color: #0f172a;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 2px solid #cbd5e1;
+        transition: all 0.3s ease;
+    }
+
+    .timer-warning {
+        background-color: #fee2e2 !important;
+        color: #b91c1c !important;
+        border-color: #ef4444 !important;
+        animation: pulse-red 1s infinite;
+    }
+
+    @keyframes pulse-red {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .question-card {
+        background: #ffffff;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .question-card.answered {
+        border-left: 5px solid #10b981;
+    }
+
+    .choice-label {
+        display: flex;
+        align-items: center;
+        padding: 0.85rem 1.25rem;
+        margin-bottom: 0.6rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #f8fafc;
+        font-size: 1rem;
+    }
+
+    .choice-label:hover {
+        background-color: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+
+    .choice-input:checked + .choice-label {
+        background-color: #eef2ff;
+        border-color: var(--primary);
+        color: #312e81;
+        font-weight: 600;
+        box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .choice-input {
+        display: none;
+    }
+
+    .nav-box {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.5rem;
+    }
+
+    .nav-btn {
+        height: 38px;
+        font-weight: 700;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .nav-btn.answered {
+        background-color: #10b981;
+        border-color: #10b981;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Yopishqoq Taymer Paneli -->
+<div class="quiz-header-bar">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h5 class="fw-bold mb-0 text-dark">{{ quiz.title }}</h5>
+            <small class="text-muted">{{ course.title }} &bull; O'tish bali: {{ quiz.passing_score }}%</small>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <div id="timerDisplay" class="timer-badge">
+                <i class="fa-solid fa-clock"></i>
+                <span id="timeRemaining">--:--</span>
+            </div>
+            <button type="button" class="btn btn-warning fw-bold px-3 py-2" onclick="confirmSubmitQuiz()">
+                <i class="fa-solid fa-paper-plane me-1"></i> Topshirish
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Savollar Asosiy Shakli (Chap tomon - 8 ustun) -->
+        <div class="col-lg-8">
+            <form id="quizForm" method="POST" action="{% url 'take_quiz' quiz.id %}">
+                {% csrf_token %}
+
+                {% for q in questions %}
+                    <div class="question-card shadow-sm" id="question-card-{{ q.id }}">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-1.5 rounded-pill">
+                                {{ forloop.counter }}-savol
+                            </span>
+                            <span class="small text-muted">1 ta to'g'ri javobni tanlang</span>
+                        </div>
+
+                        <h5 class="fw-bold text-dark mb-4">{{ q.text|linebreaksbr }}</h5>
+
+                        <div class="choices-container">
+                            {% for ch in q.choices.all %}
+                                <div>
+                                    <input 
+                                        type="radio" 
+                                        name="question_{{ q.id }}" 
+                                        id="choice_{{ ch.id }}" 
+                                        value="{{ ch.id }}" 
+                                        class="choice-input" 
+                                        data-qid="{{ q.id }}"
+                                        data-qidx="{{ forloop.parentloop.counter }}"
+                                        onchange="onAnswerSelected(this)">
+                                    <label class="choice-label" for="choice_{{ ch.id }}">
+                                        <i class="fa-regular fa-circle me-3 text-muted choice-icon"></i>
+                                        <span>{{ ch.text }}</span>
+                                    </label>
+                                </div>
+                            {% empty %}
+                                <p class="text-muted">Savol variantlari mavjud emas.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- Testni yakunlash tugmasi -->
+                <div class="d-grid mt-4">
+                    <button type="button" class="btn btn-warning btn-lg fw-bold shadow-sm" onclick="confirmSubmitQuiz()">
+                        <i class="fa-solid fa-check-double me-2"></i> Testni Yakunlash va Natijani Ko'rish
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Savollar Palitrasi (O'ng tomon - 4 ustun) -->
+        <div class="col-lg-4">
+            <div class="bg-white p-3 p-md-4 rounded-4 shadow-sm border sticky-top" style="top: 155px;">
+                <h6 class="fw-bold mb-3">Savollar palitrasi</h6>
+                <div class="nav-box mb-4">
+                    {% for q in questions %}
+                        <a href="#question-card-{{ q.id }}" class="nav-btn" id="nav-btn-{{ forloop.counter }}">
+                            {{ forloop.counter }}
+                        </a>
+                    {% endfor %}
+                </div>
+
+                <div class="small text-muted border-top pt-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-success" style="width: 16px; height: 16px; padding: 0;">&nbsp;</span>
+                        <span>Javob berilgan</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light border text-dark" style="width: 16px; height: 16px; padding: 0;">&nbsp;</span>
+                        <span>Javob berilmagan</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-4 mb-0 small">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    Vaqt tugaganda test avtomatik ravishda tekshiruvga yuboriladi.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tasdiqlash Modali (Submit Modal) -->
+<div class="modal fade" id="submitConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Testni topshirmoqchimisiz?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fa-solid fa-circle-question fa-4x text-warning mb-3"></i>
+                <p class="mb-0 fs-6">
+                    Barcha javoblaringiz serverga jo'natiladi va qayta o'zgartirib bo'lmaydi.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Davom etish</button>
+                <button type="button" class="btn btn-primary-custom" onclick="submitQuizNow()">Ha, topshirish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vaqt Tugadi Modali -->
+<div class="modal fade" id="timeUpModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow text-center py-4 px-3">
+            <div class="modal-body">
+                <i class="fa-solid fa-hourglass-end fa-4x text-danger mb-3"></i>
+                <h4 class="fw-bold text-danger">Vaqt tugadi!</h4>
+                <p class="text-muted mb-0">Ajratilgan vaqt nihoyasiga yetdi. Sizning javoblaringiz avtomatik tarzda topshirilmoqda...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Test muddati (soniyalarda)
+    let totalSeconds = {{ duration_seconds|default:600 }};
+    const timerElement = document.getElementById('timeRemaining');
+    const timerBox = document.getElementById('timerDisplay');
+    const quizForm = document.getElementById('quizForm');
+    let isSubmitting = false;
+
+    function formatTime(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // Har 1 soniyada taymerni yangilash
+    const timerInterval = setInterval(function() {
+        if (totalSeconds <= 0) {
+            clearInterval(timerInterval);
+            timerElement.textContent = "00:00";
+            autoSubmitOnTimeUp();
+            return;
+        }
+
+        totalSeconds--;
+        timerElement.textContent = formatTime(totalSeconds);
+
+        // 60 soniyadan kam qolganda ogohlantiruvchi qizil effekt
+        if (totalSeconds <= 60 && !timerBox.classList.contains('timer-warning')) {
+            timerBox.classList.add('timer-warning');
+        }
+    }, 1000);
+
+    // Dastlabki vaqtni ko'rsatish
+    timerElement.textContent = formatTime(totalSeconds);
+
+    function onAnswerSelected(radioInput) {
+        const qid = radioInput.getAttribute('data-qid');
+        const qidx = radioInput.getAttribute('data-qidx');
+
+        // Savol kartochkasini yashil qilish
+        const card = document.getElementById(`question-card-${qid}`);
+        if (card) {
+            card.classList.add('answered');
+        }
+
+        // Palitradagi tugmani yashil qilish
+        const navBtn = document.getElementById(`nav-btn-${qidx}`);
+        if (navBtn) {
+            navBtn.classList.add('answered');
+        }
+    }
+
+    function confirmSubmitQuiz() {
+        const modal = new bootstrap.Modal(document.getElementById('submitConfirmModal'));
+        modal.show();
+    }
+
+    function submitQuizNow() {
+        if (isSubmitting) return;
+        isSubmitting = true;
+        clearInterval(timerInterval);
+        quizForm.submit();
+    }
+
+    function autoSubmitOnTimeUp() {
+        if (isSubmitting) return;
+        isSubmitting = true;
+        const timeUpModal = new bootstrap.Modal(document.getElementById('timeUpModal'));
+        timeUpModal.show();
+        setTimeout(function() {
+            quizForm.submit();
+        }, 1200);
+    }
+</script>
+{% endblock %}

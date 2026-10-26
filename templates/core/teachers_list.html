@@ -1,0 +1,567 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Yetakchi O'qituvchilar va Murabbiylar — SkillUp Learning Center{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 1 QATORLI IXCHAM KARTOCKA (Compact 1-Line Row) */
+    .teacher-compact-row {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.85rem 1.25rem;
+        transition: all 0.22s ease-in-out;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    .teacher-compact-row:hover {
+        transform: translateX(4px);
+        border-color: #6366f1;
+        box-shadow: 0 8px 18px rgba(79, 70, 229, 0.12);
+        background: #fdfdfd;
+    }
+
+    .teacher-mini-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        object-fit: cover;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 2px solid #e0e7ff;
+        flex-shrink: 0;
+    }
+
+    .salary-pill-compact {
+        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        white-space: nowrap;
+    }
+
+    .rating-badge {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
+        font-weight: 700;
+        padding: 0.25rem 0.55rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+    }
+
+    /* Kategoriya Tab Pillari */
+    .cat-filter-btn {
+        border-radius: 9999px;
+        padding: 0.5rem 1.15rem;
+        font-weight: 600;
+        font-size: 0.88rem;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #475569;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+    .cat-filter-btn:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+    .cat-filter-btn.active {
+        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        color: #ffffff;
+        border-color: #4f46e5;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    /* MODAL STYLES */
+    .teacher-modal-banner {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 18px 18px 0 0;
+        position: relative;
+    }
+
+    .teacher-modal-avatar {
+        width: 90px;
+        height: 90px;
+        border-radius: 18px;
+        object-fit: cover;
+        border: 3px solid #fcd34d;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    }
+
+    .kpi-stat-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.85rem;
+        text-align: center;
+    }
+
+    .review-bubble {
+        background: #f8fafc;
+        border-left: 4px solid #4f46e5;
+        border-radius: 0 12px 12px 0;
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.65rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header & Bepul sinov darsi banneri -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 p-4 rounded-4 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);">
+        <div>
+            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">
+                <i class="fa-solid fa-chalkboard-user me-1"></i> Rasmiy O'qituvchilar Tarkibi
+            </span>
+            <h2 class="fw-extrabold mb-1">O'quv Markaz Ustozlari va Ekspertlari</h2>
+            <p class="text-light opacity-75 mb-0 small">
+                Har bir ustozning alohida portret rasmi, o'quvchilari natijalari (IELTS / Milliy sertifikat), faol guruhlari va ota-onalar baholari bilan tanishing!
+            </p>
+        </div>
+        <div>
+            <button class="btn btn-warning fw-bold px-4 py-2.5 rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#trialLessonModal">
+                <i class="fa-solid fa-calendar-check me-2"></i> Bepul Sinov Darsiga Yozilish
+            </button>
+        </div>
+    </div>
+
+    <!-- KATEGORIYALAR & QIDIRUV FILTRI -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+        <div class="row g-3 align-items-center justify-content-between">
+            <!-- Tabs -->
+            <div class="col-12 col-lg-8">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="?cat=all" class="cat-filter-btn {% if selected_cat == 'all' or not selected_cat %}active{% endif %}" onclick="filterCategory('all', event)">
+                        <i class="fa-solid fa-users"></i> Barcha Ustozlar
+                        <span class="badge {% if selected_cat == 'all' or not selected_cat %}bg-white text-primary{% else %}bg-light text-muted border{% endif %} rounded-pill">{{ cat_counts.all }}</span>
+                    </a>
+                    <a href="?cat=it" class="cat-filter-btn {% if selected_cat == 'it' %}active{% endif %}" onclick="filterCategory('it', event)">
+                        <i class="fa-solid fa-laptop-code"></i> IT & Zamonaviy Kasblar
+                        <span class="badge {% if selected_cat == 'it' %}bg-white text-primary{% else %}bg-light text-muted border{% endif %} rounded-pill">{{ cat_counts.it }}</span>
+                    </a>
+                    <a href="?cat=languages" class="cat-filter-btn {% if selected_cat == 'languages' %}active{% endif %}" onclick="filterCategory('languages', event)">
+                        <i class="fa-solid fa-language"></i> Xorijiy Tillar
+                        <span class="badge {% if selected_cat == 'languages' %}bg-white text-primary{% else %}bg-light text-muted border{% endif %} rounded-pill">{{ cat_counts.languages }}</span>
+                    </a>
+                    <a href="?cat=school" class="cat-filter-btn {% if selected_cat == 'school' %}active{% endif %}" onclick="filterCategory('school', event)">
+                        <i class="fa-solid fa-graduation-cap"></i> Fanlar & Milliy
+                        <span class="badge {% if selected_cat == 'school' %}bg-white text-primary{% else %}bg-light text-muted border{% endif %} rounded-pill">{{ cat_counts.school }}</span>
+                    </a>
+                    <a href="?cat=sport_arts" class="cat-filter-btn {% if selected_cat == 'sport_arts' %}active{% endif %}" onclick="filterCategory('sport_arts', event)">
+                        <i class="fa-solid fa-chess-knight"></i> Sport & To'garaklar
+                        <span class="badge {% if selected_cat == 'sport_arts' %}bg-white text-primary{% else %}bg-light text-muted border{% endif %} rounded-pill">{{ cat_counts.sport_arts }}</span>
+                    </a>
+                </div>
+            </div>
+            <!-- Search -->
+            <div class="col-12 col-lg-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="teacherSearchInput" class="form-control bg-light border-start-0" 
+                           placeholder="Ustoz ismi yoki mutaxassisligi..." 
+                           value="{{ search_q }}"
+                           onkeyup="liveSearchTeachers()">
+                    {% if search_q %}
+                        <a href="?cat={{ selected_cat }}" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-xmark"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- O'QITUVCHILAR 1 QATORLI IXCHAM RO'YXATI -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-5">
+        <div class="d-flex justify-content-between align-items-center px-2 py-2 mb-2 border-bottom text-muted small fw-bold text-uppercase">
+            <span style="width: 38%;">O'qituvchi & Mutaxassislik</span>
+            <span class="d-none d-md-inline" style="width: 18%;">O'quvchilar & Natija</span>
+            <span class="d-none d-lg-inline" style="width: 18%;">Dars Guruhlari</span>
+            <span style="width: 16%; text-align: right;">Oylik Maoshi</span>
+            <span style="width: 10%; text-align: right;">Batafsil</span>
+        </div>
+
+        <div id="teachersListContainer">
+        {% for item in teachers_data %}
+        <!-- 1 QATORLI KARTOCKA -->
+        <div class="teacher-compact-row" 
+             data-category="{{ item.teacher.specialties }}" 
+             data-keywords="{{ item.teacher.get_full_name|lower }} {{ item.teacher.headline|lower }} {{ item.teacher.specialties|lower }}"
+             data-bs-toggle="modal" 
+             data-bs-target="#teacherModal{{ item.teacher.id }}">
+            
+            <!-- Ism, rasm, unvon (1-blok) -->
+            <div class="d-flex align-items-center gap-3" style="width: 38%; min-width: 220px;">
+                <img src="{{ item.teacher.avatar_url }}" alt="{{ item.teacher.get_full_name }}" class="teacher-mini-avatar">
+                <div class="overflow-hidden">
+                    <div class="fw-bold text-dark text-truncate d-flex align-items-center gap-2">
+                        <span>{{ item.teacher.get_full_name|default:item.teacher.username }}</span>
+                        {% if item.teacher.specialties == 'it' %}
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill" style="font-size: 0.68rem;">IT</span>
+                        {% elif item.teacher.specialties == 'languages' %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill" style="font-size: 0.68rem;">Til</span>
+                        {% elif item.teacher.specialties == 'school' %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill" style="font-size: 0.68rem;">Fan</span>
+                        {% elif item.teacher.specialties == 'sport_arts' %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill" style="font-size: 0.68rem;">Sport</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-muted small text-truncate" style="font-size: 0.8rem;">
+                        <span class="text-primary fw-semibold">{{ item.teacher.headline|default:"Katta Ustoz" }}</span>
+                        &bull; {{ item.teacher.experience_years }} yil tajriba
+                    </div>
+                </div>
+            </div>
+
+            <!-- O'quvchilar va natija (2-blok) -->
+            <div class="d-none d-md-block" style="width: 18%;">
+                <div class="small fw-semibold text-dark">
+                    <i class="fa-solid fa-users text-info me-1"></i> {{ item.teacher.students_count }}+ o'quvchi
+                </div>
+                <div class="text-muted" style="font-size: 0.76rem;" title="{{ item.exam_results }}">
+                    <i class="fa-solid fa-award text-warning me-1"></i> {{ item.exam_results|truncatechars:26 }}
+                </div>
+            </div>
+
+            <!-- Guruhlari (3-blok) -->
+            <div class="d-none d-lg-block" style="width: 18%;">
+                <span class="badge bg-light text-dark border">
+                    <i class="fa-solid fa-layer-group text-primary me-1"></i> {{ item.total_groups }} ta guruh
+                </span>
+                <span class="rating-badge ms-1">
+                    <i class="fa-solid fa-star text-warning"></i> {{ item.average_rating }}
+                </span>
+            </div>
+
+            <!-- Oylik Maoshi (4-blok) -->
+            <div style="width: 16%; text-align: right;">
+                <span class="salary-pill-compact">
+                    <i class="fa-solid fa-money-bill-wave"></i> {{ item.salary_display }}
+                </span>
+            </div>
+
+            <!-- Modal tugmasi (5-blok) -->
+            <div style="width: 10%; text-align: right;">
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-semibold">
+                    Profil &rarr;
+                </button>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- 🌟 O'QITUVCHI POP-UP MODAL OYNASI                                  -->
+        <!-- =================================================================== -->
+        <div class="modal fade" id="teacherModal{{ item.teacher.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                    
+                    <!-- Modal Banner -->
+                    <div class="teacher-modal-banner">
+                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                        <div class="d-flex flex-wrap align-items-center gap-3">
+                            <img src="{{ item.teacher.avatar_url }}" alt="{{ item.teacher.get_full_name }}" class="teacher-modal-avatar">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <h4 class="fw-bold mb-0 text-white">{{ item.teacher.get_full_name|default:item.teacher.username }}</h4>
+                                    <span class="badge bg-warning text-dark fw-bold px-2 py-0.5 rounded-pill">
+                                        <i class="fa-solid fa-circle-check"></i> Rasmiy Murabbiy
+                                    </span>
+                                </div>
+                                <div class="text-light opacity-90 small mb-1">{{ item.teacher.headline }}</div>
+                                <div class="d-flex align-items-center gap-3 small text-light opacity-75">
+                                    <span><i class="fa-solid fa-briefcase me-1"></i> Tajriba: {{ item.teacher.experience_years }} yil</span>
+                                    <span><i class="fa-solid fa-star text-warning me-1"></i> Reyting: {{ item.average_rating }} / 5.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Tanasi -->
+                    <div class="modal-body p-4">
+                        
+                        <!-- 4 ta KPI Ko'rsatkichlari -->
+                        <div class="row g-2 mb-4">
+                            <div class="col-6 col-md-3">
+                                <div class="kpi-stat-box">
+                                    <div class="text-muted small">Oylik Maoshi</div>
+                                    <div class="fw-bold text-success" style="font-size: 0.95rem;">{{ item.salary_display }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="kpi-stat-box">
+                                    <div class="text-muted small">O'quvchilar soni</div>
+                                    <div class="fw-bold text-dark">{{ item.teacher.students_count }}+ nafar</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="kpi-stat-box">
+                                    <div class="text-muted small">Faol Guruhlari</div>
+                                    <div class="fw-bold text-primary">{{ item.total_groups }} ta guruh</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="kpi-stat-box">
+                                    <div class="text-muted small">Ota-onalar Bahosi</div>
+                                    <div class="fw-bold text-warning"><i class="fa-solid fa-star"></i> {{ item.average_rating }} (A'lo)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 🎯 O'quvchilarining Natijalari (IELTS / Milliy Sertifikat) -->
+                        <div class="p-3 bg-indigo bg-opacity-10 rounded-3 border border-indigo border-opacity-25 mb-4" style="background-color: #eef2ff;">
+                            <h6 class="fw-bold text-primary mb-1">
+                                <i class="fa-solid fa-medal text-warning me-2"></i> O'quvchilarining Erishgan Natijalari:
+                            </h6>
+                            <p class="text-dark small mb-0 fw-semibold">
+                                {{ item.exam_results }}
+                            </p>
+                        </div>
+
+                        <!-- 📝 Tarjimai holi / Bio -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-dark mb-1">
+                                <i class="fa-solid fa-user-tie text-secondary me-2"></i> Tarjimai holi va Pedagogik Yondashuvi:
+                            </h6>
+                            <p class="text-muted small mb-0" style="line-height: 1.7;">
+                                {{ item.teacher.bio|default:"Ushbu ustoz ko'p yillik amaliy tajribaga ega bo'lib, o'quvchilarni zamonaviy metodikalar, interaktiv topshiriqlar va individual yondashuv orqali yuqori natijalarga olib chiqadi." }}
+                            </p>
+                        </div>
+
+                        <!-- 👥 Dars Guruhlari va Jadvali -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-dark mb-2">
+                                <i class="fa-solid fa-calendar-days text-success me-2"></i> O'tadigan O'quv Guruhlari va Dars Jadvallari:
+                            </h6>
+                            <div class="row g-2">
+                                {% for grp in item.groups %}
+                                <div class="col-md-6">
+                                    <div class="p-2.5 bg-light border rounded-3 small">
+                                        <div class="fw-bold text-dark mb-1">{{ grp.name }}</div>
+                                        <div class="text-muted mb-1" style="font-size: 0.78rem;">
+                                            <i class="fa-solid fa-door-open text-primary me-1"></i> {{ grp.room.name|default:"101-xona" }}
+                                            &bull; <i class="fa-solid fa-clock text-warning me-1"></i> {{ grp.start_time }} - {{ grp.end_time }}
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.78rem;">
+                                            <i class="fa-solid fa-calendar text-info me-1"></i> {{ grp.get_days_schedule_display }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="col-12 text-muted small p-2">Ushbu o'qituvchiga hozircha guruhlar biriktirilmoqda.</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- ⭐ Ota-onalar Qoldirgan Baho va Sharhlar -->
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-dark mb-2">
+                                <i class="fa-solid fa-comments text-info me-2"></i> Ota-onalar va Talabalar Fikrlari:
+                            </h6>
+                            {% for rev in item.reviews %}
+                            <div class="review-bubble">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-dark small">{{ rev.author_name }} <span class="badge bg-light text-muted border fw-normal">{{ rev.author_role }}</span></strong>
+                                    <span class="text-warning small">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= rev.rating %}<i class="fa-solid fa-star"></i>{% endif %}
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-0 fst-italic">"{{ rev.comment }}"</p>
+                                {% if rev.exam_result %}
+                                    <div class="mt-1 small text-success fw-bold">
+                                        <i class="fa-solid fa-check-circle me-1"></i> {{ rev.exam_result }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <div class="review-bubble">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-dark small">Dilnoza Olimova (Ona)</strong>
+                                    <span class="text-warning small"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></span>
+                                </div>
+                                <p class="text-muted small mb-0 fst-italic">"Ustozning dars berish uslubi juda ajoyib! Farzandim darslarga qiziqish bilan bormoqda va bilim darajasi ancha oshdi."</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer bg-light border-0 d-flex justify-content-between p-3">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Yopish</button>
+                        <button type="button" class="btn btn-warning fw-bold px-4 rounded-pill shadow-sm" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#trialLessonModal" onclick="selectTeacherForTrial('{{ item.teacher.id }}', '{{ item.teacher.headline|escapejs }}');">
+                            <i class="fa-solid fa-calendar-plus me-1"></i> Ushbu Ustozda Sinov Darsiga Yozilish
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-chalkboard-user fa-3x mb-3 text-secondary"></i>
+            <h5>Hech qanday o'qituvchi topilmadi.</h5>
+            <p class="small">Qidiruv so'zini o'zgartirib ko'ring yoki boshqa toifani tanlang.</p>
+        </div>
+        {% endfor %}
+        </div>
+
+        <div id="noMatchMessage" class="text-center py-5 text-muted d-none">
+            <i class="fa-solid fa-user-slash fa-3x mb-3 text-warning"></i>
+            <h5>Kiritilgan so'rov bo'yicha ustoz topilmadi.</h5>
+            <p class="small">Iltimos, boshqa ism yoki yo'nalishni qidirib ko'ring.</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- =================================================================== -->
+<!-- 📝 BEPUL SINOV DARSIGA YOZILISH MODALI (CRM Lead Form)              -->
+<!-- =================================================================== -->
+<div class="modal fade" id="trialLessonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-warning text-dark p-3">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa-solid fa-rocket me-2"></i> Bepul Sinov Darsiga Yozilish
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{% url 'submit_lead' %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">
+                        Ismingiz va telefon raqamingizni qoldiring. Markazimiz ma'muri 15 daqiqa ichida siz bilan bog'lanib, qulay dars vaqtini tasdiqlaydi.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Ism va Familiyangiz *</label>
+                        <input type="text" name="full_name" class="form-control rounded-3" placeholder="Masalan: Azizbek Aliyev" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Telefon raqamingiz *</label>
+                        <input type="tel" name="phone_number" class="form-control rounded-3" placeholder="+998 90 123-45-67" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Qiziqqan fan yoki to'garak</label>
+                        <input type="text" id="subjectInput" name="interested_subject" class="form-control rounded-3" placeholder="Masalan: Frontend Dasturlash yoki IELTS">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Afzal ko'rgan o'qituvchi</label>
+                        <select id="prefTeacherInput" name="preferred_teacher_id" class="form-select rounded-3">
+                            <option value="">Ixtiyoriy (Eng tajribali ustoz)</option>
+                            {% for t in all_teachers %}
+                                <option value="{{ t.id }}">{{ t.get_full_name|default:t.username }} ({{ t.headline }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Sizga qulay dars vaqti</label>
+                        <select name="preferred_time" class="form-select rounded-3">
+                            <option value="09:00 - 12:00 (Ertalabki)">09:00 - 12:00 (Ertalabki guruh)</option>
+                            <option value="14:00 - 18:00 (Kunduzgi)" selected>14:00 - 18:00 (Kunduzgi guruh)</option>
+                            <option value="18:30 - 20:30 (Kechki)">18:30 - 20:30 (Kechki guruh)</option>
+                            <option value="Hafta oxiri (Shanba - Yakshanba)">Hafta oxiri (Shanba - Yakshanba)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-dark">Qo'shimcha istak yoki savol</label>
+                        <textarea name="notes" class="form-control rounded-3" rows="2" placeholder="Masalan: DTM imtihoniga tayyorlanmoqchiman..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-0 p-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Bekor qilish</button>
+                    <button type="submit" class="btn btn-warning fw-bold rounded-pill px-4 shadow-sm">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Ariza Yuborish
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live Client-side Search and Filter
+    let activeCategory = '{{ selected_cat|default:"all" }}';
+
+    function selectTeacherForTrial(teacherId, headline) {
+        const prefSelect = document.getElementById('prefTeacherInput');
+        const subjInput = document.getElementById('subjectInput');
+        if (prefSelect) prefSelect.value = teacherId;
+        if (subjInput) subjInput.value = headline;
+    }
+
+    function filterCategory(cat, e) {
+        if (e) e.preventDefault();
+        activeCategory = cat;
+        document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        if (e && e.currentTarget) {
+            e.currentTarget.classList.add('active');
+        }
+        liveSearchTeachers();
+    }
+
+    function liveSearchTeachers() {
+        const query = (document.getElementById('teacherSearchInput').value || '').trim().toLowerCase();
+        const rows = document.querySelectorAll('#teachersListContainer .teacher-compact-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const rowCat = row.getAttribute('data-category');
+            const rowKeywords = row.getAttribute('data-keywords') || '';
+
+            const matchesCat = (activeCategory === 'all' || rowCat === activeCategory);
+            const matchesQuery = (!query || rowKeywords.includes(query));
+
+            if (matchesCat && matchesQuery) {
+                row.style.display = 'flex';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const noMatchMsg = document.getElementById('noMatchMessage');
+        if (noMatchMsg) {
+            if (visibleCount === 0) {
+                noMatchMsg.classList.remove('d-none');
+            } else {
+                noMatchMsg.classList.add('d-none');
+            }
+        }
+    }
+</script>
+{% endblock %}

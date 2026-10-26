@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ category.name }} - Elnura's Flowers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .flower-card:hover img { transform: scale(1.06); }
+    </style>
+</head>
+<body class="bg-[#f5f6f9] font-sans text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white sticky top-0 z-40 border-b border-gray-100 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="{% url 'home' %}" class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-2xl bg-[#7000ff] flex items-center justify-center text-white text-xl shadow-md shadow-indigo-100">
+                    <i class="fa-solid fa-spa"></i>
+                </span>
+                <span class="text-2xl font-black text-[#7000ff] tracking-tight">
+                    Elnura's <span class="text-rose-500 font-extrabold">Flowers</span>
+                </span>
+            </a>
+            
+            <a href="{% url 'home' %}" class="flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-[#7000ff] bg-gray-100 hover:bg-[#7000ff]/10 px-4 py-2.5 rounded-xl transition">
+                <i class="fa-solid fa-arrow-left"></i> Bosh sahifaga qaytish
+            </a>
+        </div>
+    </header>
+
+    <!-- Kategoriya Sarlavhasi va Yetkazib berish kafolati -->
+    <div class="max-w-7xl mx-auto px-4 pt-6 pb-2">
+        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <span class="text-[11px] font-bold text-[#7000ff] bg-[#7000ff]/10 px-3 py-1 rounded-full uppercase tracking-wider">
+                    Gullar Kolleksiyasi
+                </span>
+                <h1 class="text-2xl md:text-3xl font-black text-gray-900 mt-2">
+                    {{ category.name }} — Ranglar va Buketlar
+                </h1>
+                <p class="text-xs text-gray-500 mt-1">
+                    Barcha guldastalarga maxsus suvli idishda, so‘lib qolmaydigan qilib yetkazib beriladi
+                </p>
+            </div>
+            
+            <!-- Tezkor yetkazish bloki -->
+            <div class="flex items-center gap-3 bg-purple-50 border border-purple-100 text-[#7000ff] px-4 py-3 rounded-2xl text-xs font-bold">
+                <div class="w-8 h-8 rounded-xl bg-[#7000ff] text-white flex items-center justify-center text-sm shadow-sm">
+                    <i class="fa-solid fa-truck-fast"></i>
+                </div>
+                <div>
+                    <div class="text-gray-900 font-extrabold">Tezkor kuryer xizmati</div>
+                    <div class="text-[11px] text-gray-500 font-medium">Shahar bo'ylab 1-2 soatda yetkazamiz</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gullar va Buketlar Gridi -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {% for item in flowers %}
+            <div class="flower-card bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col justify-between group">
+                
+                <!-- Rasm -->
+                <div class="relative aspect-[4/5] bg-gray-50 overflow-hidden">
+                    <img src="{{ item.image_url }}" alt="{{ item.title }}" class="w-full h-full object-cover transition duration-500">
+                    
+                    <!-- Yetkazib berish belgisi (Badge) -->
+                    <div class="absolute top-2.5 left-2.5">
+                        {% if item.delivery_price == 0 %}
+                            <span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-md font-bold shadow-sm flex items-center gap-1">
+                                <i class="fa-solid fa-check"></i> Yetkazish bepul
+                            </span>
+                        {% else %}
+                            <span class="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-md font-bold shadow-sm flex items-center gap-1">
+                                <i class="fa-solid fa-bolt"></i> Yetkazish: {{ item.delivery_price }} so'm
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur-md text-white text-[10px] px-2.5 py-0.5 rounded-lg flex items-center gap-1 font-medium">
+                        <i class="fa-solid fa-truck text-emerald-400"></i> {{ item.delivery_time }}
+                    </div>
+                </div>
+
+                <!-- Tavsif va Narx -->
+                <div class="p-4 flex flex-col flex-1 justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-900 line-clamp-2 leading-relaxed group-hover:text-[#7000ff] transition">
+                            {{ item.title }}
+                        </h4>
+
+                        <div class="flex items-center gap-1 text-[11px] text-gray-500 mt-1">
+                            <i class="fa-solid fa-star text-amber-400 text-[10px]"></i>
+                            <span class="font-bold text-gray-800">{{ item.rating }}</span>
+                            <span>({{ item.reviews_count }} ta sharh)</span>
+                        </div>
+
+                        <!-- Uzum muddatli to'lov -->
+                        <div class="mt-2 inline-block bg-[#ffff00] text-gray-900 text-[10px] font-black px-2 py-0.5 rounded-md">
+                            {{ item.monthly_installment }} so'm/oy
+                        </div>
+                    </div>
+
+                    <!-- Narx va Yetkazib berish bilan buyurtma tugmasi -->
+                    <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                        <div>
+                            {% if item.old_price %}
+                                <span class="text-[11px] line-through text-gray-400 block leading-tight">
+                                    {{ item.old_price }} so'm
+                                </span>
+                            {% endif %}
+                            <span class="text-sm md:text-base font-black text-gray-900 block leading-tight">
+                                {{ item.price }} so'm
+                            </span>
+                        </div>
+
+                        <!-- Buyurtma va Yetkazish tugmasi -->
+                        <button onclick="openDeliveryModal('{{ item.title }}', '{{ item.price }}', '{{ item.delivery_price }}')" 
+                                class="px-3 py-2 rounded-xl bg-[#7000ff] hover:bg-[#5b00d1] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-indigo-100">
+                            <i class="fa-solid fa-truck-fast"></i> Yetkazish
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <!-- YETKAZIB BERISH VA BUYURTMA MODAL OYNASI -->
+    <div id="deliveryModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden overflow-y-auto p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl relative my-8">
+            <button onclick="closeDeliveryModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Sarlavha -->
+            <div class="flex items-center gap-3 mb-4">
+                <span class="w-11 h-11 rounded-2xl bg-[#7000ff]/10 text-[#7000ff] flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-truck-ramp-box"></i>
+                </span>
+                <div>
+                    <h3 class="text-lg font-black text-gray-900">Yetkazib berish xizmati</h3>
+                    <p id="modalItemTitle" class="text-xs text-[#7000ff] font-bold line-clamp-1"></p>
+                </div>
+            </div>
+
+            <!-- Hisob-kitob qutisi -->
+            <div class="bg-gray-50 border border-gray-100 p-3.5 rounded-2xl mb-4 space-y-1.5 text-xs">
+                <div class="flex justify-between items-center text-gray-600">
+                    <span>Guldasta narxi:</span>
+                    <span id="modalFlowerPrice" class="font-bold text-gray-900"></span>
+                </div>
+                <div class="flex justify-between items-center text-gray-600">
+                    <span>Yetkazish to'lovi:</span>
+                    <span id="modalDeliveryCost" class="font-bold text-emerald-600">Bepul</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-900 pt-2 border-t border-gray-200 text-sm font-black">
+                    <span>Jami to'lov:</span>
+                    <span id="modalTotalPrice" class="text-base text-[#7000ff]"></span>
+                </div>
+            </div>
+
+            <!-- Yetkazish shakli -->
+            <form onsubmit="submitDeliveryOrder(event)" class="space-y-3.5 text-xs">
+                
+                <!-- Yetkazish usuli tanlovi -->
+                <div>
+                    <label class="font-bold text-gray-700 block mb-1.5">Yetkazish usulini tanlang:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="border-2 border-[#7000ff] bg-purple-50/50 p-2.5 rounded-xl flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="del_method" value="express" checked class="accent-[#7000ff]" onchange="updateDeliveryOption(0)">
+                            <div>
+                                <div class="font-bold text-gray-900">⚡ Tezkor (1-2 soatda)</div>
+                                <div class="text-[10px] text-gray-500">Kuryer zudlik bilan yo'lga chiqadi</div>
+                            </div>
+                        </label>
+                        <label class="border border-gray-200 p-2.5 rounded-xl flex items-center gap-2 cursor-pointer hover:border-gray-300">
+                            <input type="radio" name="del_method" value="time" class="accent-[#7000ff]" onchange="updateDeliveryOption(0)">
+                            <div>
+                                <div class="font-bold text-gray-900">🕒 Aniq vaqtga</div>
+                                <div class="text-[10px] text-gray-500">Siz tanlagan soatda boradi</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="font-bold text-gray-600 block mb-1">Qabul qiluvchining ismi</label>
+                        <input type="text" required placeholder="Masalan: Madina" 
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-[#7000ff] outline-none">
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-600 block mb-1">Telefon raqam</label>
+                        <input type="tel" required placeholder="+998 90 123 45 67" 
+                               class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-[#7000ff] outline-none">
+                    </div>
+                </div>
+
+                <!-- Manzil va Mo'ljal -->
+                <div>
+                    <label class="font-bold text-gray-600 block mb-1">Aniq yetkazib berish manzili</label>
+                    <input type="text" required placeholder="Shahar, tuman, ko'cha, uy raqami yoki mo'ljal" 
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-[#7000ff] outline-none">
+                </div>
+
+                <!-- Otkritka / Tabrik xati -->
+                <div>
+                    <label class="font-bold text-gray-600 block mb-1">Guldastaga bepul tabrik xati (Mini-otkritka)</label>
+                    <textarea rows="2" placeholder="Masalan: Chin yurakdan tabriklayman! Baxtli bo'ling..." 
+                              class="w-full px-3.5 py-2 rounded-xl border border-gray-200 focus:border-[#7000ff] outline-none"></textarea>
+                </div>
+
+                <!-- Anonim sovg'a opsiyasi -->
+                <label class="flex items-center gap-2 text-gray-700 cursor-pointer pt-1">
+                    <input type="checkbox" class="accent-[#7000ff] rounded w-4 h-4">
+                    <span class="font-semibold text-gray-800">Kuryer yuboruvchi ismini aytmasin (Anonim sovg'a 🤫)</span>
+                </label>
+
+                <!-- Tasdiqlash tugmasi -->
+                <button type="submit" class="w-full py-3.5 bg-[#7000ff] hover:bg-[#5b00d1] text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 transition mt-2 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-check"></i> Yetkazib berishni tasdiqlash
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JS Mantiq -->
+    <script>
+        const deliveryModal = document.getElementById('deliveryModal');
+        const modalItemTitle = document.getElementById('modalItemTitle');
+        const modalFlowerPrice = document.getElementById('modalFlowerPrice');
+        const modalDeliveryCost = document.getElementById('modalDeliveryCost');
+        const modalTotalPrice = document.getElementById('modalTotalPrice');
+
+        let currentBasePrice = 0;
+        let currentDelPrice = 0;
+
+        function openDeliveryModal(title, price, deliveryPrice) {
+            currentBasePrice = parseInt(price);
+            currentDelPrice = parseInt(deliveryPrice) || 0;
+
+            modalItemTitle.innerText = title;
+            modalFlowerPrice.innerText = currentBasePrice.toLocaleString() + " so'm";
+            
+            if (currentDelPrice === 0) {
+                modalDeliveryCost.innerText = "Bepul yetkazish";
+                modalDeliveryCost.className = "font-bold text-emerald-600";
+            } else {
+                modalDeliveryCost.innerText = currentDelPrice.toLocaleString() + " so'm";
+                modalDeliveryCost.className = "font-bold text-gray-900";
+            }
+
+            modalTotalPrice.innerText = (currentBasePrice + currentDelPrice).toLocaleString() + " so'm";
+            deliveryModal.classList.remove('hidden');
+        }
+
+        function closeDeliveryModal() {
+            deliveryModal.classList.add('hidden');
+        }
+
+        function submitDeliveryOrder(e) {
+            e.preventDefault();
+            alert("Rahmat! Yetkazib berish buyurtmangiz qabul qilindi. Kuryerimiz tez orada manzilga yetib boradi!");
+            closeDeliveryModal();
+        }
+
+        window.onclick = function(e) {
+            if (e.target === deliveryModal) closeDeliveryModal();
+        }
+    </script>
+
+</body>
+</html>

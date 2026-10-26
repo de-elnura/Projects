@@ -1,0 +1,64 @@
+{% extends 'lms/base.html' %}
+
+{% block title %}Dars Qo'shish — {{ module.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-12">
+    <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm space-y-6">
+        
+        <div>
+            <a href="{% url 'teacher_dashboard' %}" class="text-xs font-bold text-indigo-600 hover:underline mb-2 inline-block">
+                &larr; Studiyaga qaytish
+            </a>
+            <h1 class="text-2xl font-extrabold text-slate-900">Yangi Dars Qo'shish</h1>
+            <p class="text-slate-500 text-xs mt-1">Modul: «{{ module.title }}» (Kurs: {{ module.course.title }})</p>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Dars Nomi</label>
+                {{ form.title }}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Tartibi (Order)</label>
+                    {{ form.order }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Davomiyligi (daqiqa)</label>
+                    {{ form.duration_minutes }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Video Havola (YouTube yoki MP4 URL)</label>
+                {{ form.video_url }}
+                <p class="text-[11px] text-slate-400 mt-1">Masalan: https://www.youtube.com/watch?v=kqtD5dpn9C8</p>
+            </div>
+
+            <div class="flex items-center gap-2 py-2">
+                {{ form.is_free_preview }}
+                <label class="text-xs font-bold text-slate-700">Bepul tanishuv darsi (kursga yozilmasdan ko'rish mumkin)</label>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Dars Matni va Kod Namunalari</label>
+                {{ form.content }}
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                <a href="{% url 'teacher_dashboard' %}" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
+                    Bekor qilish
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow transition">
+                    Darsni Saqlash
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock %}

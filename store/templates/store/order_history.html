@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savdolarim Tarixi — Elnura's Flowers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#f7f8fc] font-sans text-gray-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between">
+            <a href="{% url 'home' %}" class="flex items-center gap-2.5">
+                <span class="w-10 h-10 rounded-2xl bg-[#7000ff] text-white flex items-center justify-center text-xl shadow-md shadow-purple-500/20">
+                    <i class="fa-solid fa-spa"></i>
+                </span>
+                <div class="flex flex-col">
+                    <span class="text-2xl font-black text-[#7000ff] tracking-tight leading-none">
+                        Elnura's <span class="text-rose-500 font-extrabold">Flowers</span>
+                    </span>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Online Gul Do'koni</span>
+                </div>
+            </a>
+            <div class="flex items-center gap-2.5 sm:gap-3">
+                <a href="{% url 'profile_view' %}" class="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-[#7000ff] bg-gray-50 hover:bg-purple-50/60 px-3 py-2 rounded-xl border border-gray-200/80 transition">
+                    <i class="fa-solid fa-user text-sm text-[#7000ff]"></i>
+                    <span class="hidden sm:inline">Profil</span>
+                </a>
+                <a href="{% url 'cart_view' %}" class="flex items-center gap-2 bg-[#7000ff] hover:bg-[#5b00d1] text-white px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold shadow-md shadow-purple-500/20 transition">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="hidden sm:inline">Savat</span>
+                    <span class="bg-white text-[#7000ff] px-1.5 py-0.2 rounded-full font-black text-[10px]">
+                        {{ cart_count|default:"0" }}
+                    </span>
+                </a>
+                <a href="{% url 'home' %}" class="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-[#7000ff] bg-gray-50 hover:bg-purple-50/60 px-3 py-2 rounded-xl border border-gray-200/80 transition">
+                    <i class="fa-solid fa-house text-sm text-[#7000ff]"></i>
+                    <span class="hidden sm:inline">Bosh sahifa</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8 flex-1 w-full">
+        <!-- Bildirishnomalar (Django Messages) -->
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+            <div class="p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xs transition {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% elif message.tags == 'error' %}bg-rose-50 text-rose-800 border border-rose-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% else %}bg-purple-50 text-purple-800 border border-purple-200{% endif %}">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check text-emerald-500{% elif message.tags == 'error' %}fa-circle-exclamation text-rose-500{% elif message.tags == 'warning' %}fa-triangle-exclamation text-amber-500{% else %}fa-circle-info text-[#7000ff]{% endif %} text-base"></i>
+                    <span>{{ message }}</span>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600 px-1 py-0.5">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Sarlavha va Umumiy Harakatlar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+                <span class="text-xs font-bold text-[#7000ff] bg-purple-50 px-3 py-1 rounded-full uppercase tracking-wider">
+                    Xaridlar
+                </span>
+                <h1 class="text-2xl md:text-3xl font-black text-gray-900 mt-2">Savdolarim va Yetkazish Tarixi</h1>
+                <p class="text-xs text-gray-500 mt-1">Buyurtmangiz holati va yetkazib berish jarayonini bu yerda kuzatishingiz mumkin</p>
+            </div>
+            {% if active_orders_count > 0 %}
+            <div>
+                <button type="button" onclick="openCancelAllModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-2xl text-xs font-bold transition shadow-xs">
+                    <i class="fa-solid fa-ban text-rose-500"></i>
+                    <span>Barcha buyurtmalarni bekor qilish ({{ active_orders_count }})</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if orders %}
+        <div class="space-y-5">
+            {% for order in orders %}
+            <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs transition hover:shadow-md">
+                <!-- Buyurtma yuqori qismi -->
+                <div class="flex flex-wrap justify-between items-center pb-4 border-b border-gray-100 gap-2">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-black text-base text-gray-900">Buyurtma #{{ order.id }}</span>
+                            {% if order.is_anonymous %}
+                            <span class="bg-purple-50 text-[#7000ff] text-[10px] font-bold px-2 py-0.5 rounded-md border border-purple-100">
+                                🤫 Anonim
+                            </span>
+                            {% endif %}
+                        </div>
+                        <span class="text-xs text-gray-400 block mt-0.5">{{ order.created_at|date:"d.m.Y, H:i" }}</span>
+                    </div>
+
+                    <!-- Status nishonlari -->
+                    {% if order.status == 'cancelled' %}
+                    <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-xmark text-[11px]"></i>
+                        {{ order.get_status_display }}
+                    </span>
+                    {% elif order.status == 'delivered' %}
+                    <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-check text-[11px]"></i>
+                        {{ order.get_status_display }}
+                    </span>
+                    {% elif order.status == 'pending' %}
+                    <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock text-[11px]"></i>
+                        {{ order.get_status_display }}
+                    </span>
+                    {% else %}
+                    <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-purple-50 text-[#7000ff] border border-purple-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-truck text-[11px]"></i>
+                        {{ order.get_status_display }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Qabul qiluvchi ma'lumotlari -->
+                <div class="py-4 text-xs text-gray-600 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <p class="text-gray-400 text-[11px]">Qabul qiluvchi:</p>
+                        <p class="font-bold text-gray-800 text-sm">{{ order.full_name }}</p>
+                        <p class="text-gray-500 mt-0.5"><i class="fa-solid fa-phone text-[10px] mr-1 text-[#7000ff]"></i>{{ order.phone }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-[11px]">Yetkazib berish manzili va vaqti:</p>
+                        <p class="font-semibold text-gray-800"><i class="fa-solid fa-location-dot text-[10px] mr-1 text-[#7000ff]"></i>{{ order.address }}</p>
+                        <p class="text-emerald-700 font-semibold mt-0.5"><i class="fa-solid fa-clock text-[10px] mr-1"></i>{{ order.delivery_time }}</p>
+                    </div>
+                    {% if order.greeting_card %}
+                    <div class="sm:col-span-2 bg-purple-50/60 border border-purple-100/80 p-3 rounded-2xl text-purple-900 mt-1">
+                        <span class="font-bold text-[11px] block text-[#7000ff]"><i class="fa-solid fa-envelope-open-text mr-1"></i> Tabrik xati:</span>
+                        <span class="italic text-xs">"{{ order.greeting_card }}"</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Buyurtma ichidagi gullar -->
+                <div class="py-3 border-t border-gray-100">
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2.5">Buyurtma qilingan gullar:</p>
+                    <div class="space-y-2">
+                        {% for item in order.items.all %}
+                        <div class="flex items-center justify-between text-xs bg-gray-50/80 p-2.5 rounded-2xl">
+                            <div class="flex items-center gap-3">
+                                {% if item.flower and item.flower.image_url %}
+                                <div class="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                                    <img src="{{ item.flower.image_url }}" alt="{{ item.flower.title }}" class="w-full h-full object-cover">
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <span class="font-bold text-gray-900 block">{{ item.flower.title|default:"Guldasta" }}</span>
+                                    <span class="text-gray-500 text-[10px]">{{ item.quantity }} dona × {{ item.price }} so'm</span>
+                                </div>
+                            </div>
+                            <span class="font-black text-gray-900">{% widthratio item.price 1 item.quantity %} so'm</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-gray-400 italic">Gullar tafsiloti mavjud emas</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Jami to'lov va Harakatlar (Bekor qilish / Qayta buyurtma) -->
+                {% if order.status == 'cancelled' %}
+                <div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <span class="text-xs font-bold text-gray-400">Bekor qilingan summa:</span>
+                        <span class="text-base font-bold text-gray-400 line-through ml-1">{{ order.total_price }} so'm</span>
+                        <span class="text-[11px] text-rose-500 block font-semibold mt-0.5">Ushbu buyurtma bekor qilingan</span>
+                    </div>
+                    <a href="{% url 'reorder' order.id %}" class="px-4 py-2 bg-purple-50 hover:bg-[#7000ff] text-[#7000ff] hover:text-white border border-purple-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Gullarni qayta savatga solish</span>
+                    </a>
+                </div>
+                {% elif order.status == 'delivered' %}
+                <div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <span class="text-xs font-bold text-gray-500">Jami to'langan summa:</span>
+                        <span class="text-lg font-black text-emerald-600 ml-1">{{ order.total_price }} so'm</span>
+                    </div>
+                    <a href="{% url 'reorder' order.id %}" class="px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Yana xarid qilish</span>
+                    </a>
+                </div>
+                {% else %}
+                <div class="pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <span class="text-xs font-bold text-gray-500">Jami to'lov:</span>
+                        <span class="text-lg font-black text-[#7000ff] ml-1">{{ order.total_price }} so'm</span>
+                    </div>
+                    <button type="button" onclick="confirmCancelOrder('{{ order.id }}')" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                        <i class="fa-solid fa-ban text-rose-500"></i>
+                        <span>Buyurtmani bekor qilish</span>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-xs">
+            <span class="w-16 h-16 rounded-full bg-purple-50 text-[#7000ff] flex items-center justify-center text-2xl mx-auto mb-4">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </span>
+            <h3 class="text-lg font-black text-gray-900 mb-1">Buyurtmalar tarixi topilmadi</h3>
+            <p class="text-gray-500 text-xs mb-6">Siz hali hech qanday buyurtma amalga oshirmagansiz.</p>
+            <a href="{% url 'home' %}" class="px-5 py-2.5 bg-[#7000ff] hover:bg-[#5b00d1] text-white text-xs font-bold rounded-xl shadow-md transition inline-block">
+                Gullarni ko'rish va buyurtma berish
+            </a>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Alohida buyurtmani bekor qilish modali -->
+    <div id="cancelOrderModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full border border-gray-100 shadow-2xl text-center animate-scale-up">
+            <span class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-2xl mx-auto mb-3">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </span>
+            <h3 class="text-base font-black text-gray-900 mb-1.5">Buyurtmani bekor qilasizmi?</h3>
+            <p class="text-xs text-gray-500 mb-5 leading-relaxed" id="cancelModalText">
+                Ushbu buyurtmani bekor qilishni tasdiqlaysizmi? Bu amalni ortga qaytarib bo'lmaydi.
+            </p>
+            <form id="cancelOrderForm" method="POST" action="">
+                {% csrf_token %}
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button type="button" onclick="closeCancelOrderModal()" class="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition">
+                        Yo'q, qolsin
+                    </button>
+                    <button type="submit" class="py-2.5 px-4 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition">
+                        Ha, bekor qilinsin
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Barcha buyurtmalarni bekor qilish modali -->
+    <div id="cancelAllModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full border border-gray-100 shadow-2xl text-center">
+            <span class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-2xl mx-auto mb-3">
+                <i class="fa-solid fa-ban"></i>
+            </span>
+            <h3 class="text-base font-black text-gray-900 mb-1.5">Barcha buyurtmalarni bekor qilish</h3>
+            <p class="text-xs text-gray-500 mb-5 leading-relaxed">
+                Haqiqatan ham barcha faol buyurtmalaringizni bekor qilmoqchimisiz?
+            </p>
+            <form method="POST" action="{% url 'cancel_all_orders' %}">
+                {% csrf_token %}
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button type="button" onclick="closeCancelAllModal()" class="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition">
+                        Ortga
+                    </button>
+                    <button type="submit" class="py-2.5 px-4 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition">
+                        Ha, barchasini bekor qil
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript mantiqi -->
+    <script>
+        function confirmCancelOrder(orderId) {
+            const modal = document.getElementById('cancelOrderModal');
+            const form = document.getElementById('cancelOrderForm');
+            const text = document.getElementById('cancelModalText');
+            
+            form.action = `/buyurtma-bekor-qilish/${orderId}/`;
+            text.textContent = `#${orderId}-sonli buyurtmani bekor qilishni tasdiqlaysizmi?`;
+            modal.classList.remove('hidden');
+        }
+
+        function closeCancelOrderModal() {
+            document.getElementById('cancelOrderModal').classList.add('hidden');
+        }
+
+        function openCancelAllModal() {
+            document.getElementById('cancelAllModal').classList.remove('hidden');
+        }
+
+        function closeCancelAllModal() {
+            document.getElementById('cancelAllModal').classList.add('hidden');
+        }
+
+        // Modal tashqarisiga bosilganda yopish
+        window.onclick = function(event) {
+            const singleModal = document.getElementById('cancelOrderModal');
+            const allModal = document.getElementById('cancelAllModal');
+            if (event.target === singleModal) {
+                closeCancelOrderModal();
+            }
+            if (event.target === allModal) {
+                closeCancelAllModal();
+            }
+        }
+    </script>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-100 py-6 text-center text-xs text-gray-400 mt-10">
+        Elnura's Flowers — Toshkent bo'ylab 1-2 soatda tezkor yetkazib berish
+    </footer>
+
+</body>
+</html>

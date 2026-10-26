@@ -1,0 +1,746 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Statistika va Analitika — SkillUp / EduQuiz{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+    }
+    .stat-hero::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(99, 102, 241, 0) 70%);
+        border-radius: 50%;
+    }
+    .stat-kpi-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .stat-kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -4px rgba(79, 70, 229, 0.15);
+        border-color: #c7d2fe;
+    }
+    .kpi-icon-wrap {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .chart-container-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 1.75rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .chart-container-card .card-header-clean {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .chart-canvas-wrapper {
+        position: relative;
+        flex-grow: 1;
+        min-height: 280px;
+    }
+    .teacher-avatar-table {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        object-fit: cover;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .salary-badge {
+        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        color: #065f46;
+        font-weight: 700;
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        border: 1px solid #a7f3d0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.85rem;
+    }
+    .kpi-badge-gold {
+        background: linear-gradient(135deg, #fffbeb, #fef3c7);
+        color: #92400e;
+        font-weight: 700;
+        padding: 0.3rem 0.65rem;
+        border-radius: 8px;
+        border: 1px solid #fde68a;
+        font-size: 0.85rem;
+    }
+    .cluster-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 1.25rem;
+        transition: all 0.25s ease;
+        height: 100%;
+    }
+    .cluster-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+    }
+    .nav-pills-custom .nav-link {
+        color: #64748b;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 0.6rem 1.25rem;
+        transition: all 0.2s;
+    }
+    .nav-pills-custom .nav-link.active {
+        background-color: var(--primary);
+        color: white;
+        box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+    }
+    @media print {
+        .navbar-custom, footer, .no-print {
+            display: none !important;
+        }
+        body {
+            background: white !important;
+        }
+        .stat-hero {
+            background: #1e1b4b !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+        }
+        .chart-container-card {
+            break-inside: avoid;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- 🌟 HERO HEADER -->
+    <div class="stat-hero">
+        <div class="row align-items-center position-relative" style="z-index: 2;">
+            <div class="col-lg-8">
+                <span class="badge bg-indigo text-light border border-light border-opacity-25 px-3 py-2 rounded-pill mb-3">
+                    <i class="fa-solid fa-chart-line me-1 text-warning"></i> Rasmiy Ochiq Analitika va Natijalar
+                </span>
+                <h1 class="display-6 fw-bold mb-2">EduQuiz / SkillUp Statistikasi</h1>
+                <p class="lead text-light text-opacity-75 mb-3" style="max-width: 650px;">
+                    O'qituvchilar tarkibi, ularning oylik maoshlari, to'garaklar yo'nalishlari va o'quvchilarning real o'zlashtirish ko'rsatkichlarining jonli tahliliy hisoboti.
+                </p>
+                <div class="d-flex flex-wrap gap-2 pt-1 no-print">
+                    <a href="#teachers-section" class="btn btn-light btn-sm fw-bold px-3 py-2 rounded-pill shadow-sm">
+                        <i class="fa-solid fa-chalkboard-user me-1 text-primary"></i> Ustozlar Jadvali
+                    </a>
+                    <a href="#charts-section" class="btn btn-outline-light btn-sm fw-semibold px-3 py-2 rounded-pill">
+                        <i class="fa-solid fa-chart-pie me-1"></i> Jonli Grafiklar
+                    </a>
+                    <button onclick="window.print()" class="btn btn-outline-light btn-sm fw-semibold px-3 py-2 rounded-pill">
+                        <i class="fa-solid fa-print me-1"></i> Hisobotni Chop Etish (PDF)
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-4 d-none d-lg-block text-end">
+                <div class="bg-white bg-opacity-10 p-4 rounded-4 backdrop-blur border border-white border-opacity-10 text-center">
+                    <div class="text-uppercase tracking-wider text-light text-opacity-75 small fw-semibold mb-1">Oylik Jami Maosh Fondi</div>
+                    <h2 class="display-6 fw-extrabold text-warning mb-1">{{ total_monthly_payroll|floatformat:0 }} <small class="fs-6">so'm</small></h2>
+                    <div class="small text-light text-opacity-75">
+                        <i class="fa-solid fa-circle-check text-success me-1"></i> {{ total_teachers }} nafar yetakchi ustozlar ta'minoti
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📊 TOP KPI BLOKLARI (5 ta asosiy metrika) -->
+    <div class="row g-3 mb-4">
+        <!-- 1. O'quvchilar soni -->
+        <div class="col-sm-6 col-lg">
+            <div class="stat-kpi-card">
+                <div class="kpi-icon-wrap bg-primary bg-opacity-10 text-primary">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">Faol Talabalar</div>
+                <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_students }}</h3>
+                <div class="small text-muted mt-2">
+                    <span class="text-success fw-bold"><i class="fa-solid fa-arrow-trend-up"></i> +{{ total_enrollments }}</span> a'zolik
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. O'qituvchilar soni -->
+        <div class="col-sm-6 col-lg">
+            <div class="stat-kpi-card">
+                <div class="kpi-icon-wrap bg-success bg-opacity-10 text-success">
+                    <i class="fa-solid fa-chalkboard-teacher"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">O'qituvchilar</div>
+                <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_teachers }}</h3>
+                <div class="small text-muted mt-2">
+                    <span class="text-success fw-bold">5 - 15 mln</span> so'm maosh
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. O'rtacha Imtihon Bali -->
+        <div class="col-sm-6 col-lg">
+            <div class="stat-kpi-card">
+                <div class="kpi-icon-wrap bg-warning bg-opacity-10 text-warning">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">O'rtacha Natija</div>
+                <h3 class="fw-bold text-dark mt-1 mb-0">{{ avg_quiz_score }}%</h3>
+                <div class="small text-muted mt-2">
+                    <span class="text-primary fw-bold">{{ quiz_pass_rate }}%</span> muvaffaqiyat
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Berilgan Sertifikatlar -->
+        <div class="col-sm-6 col-lg">
+            <div class="stat-kpi-card">
+                <div class="kpi-icon-wrap bg-info bg-opacity-10 text-info">
+                    <i class="fa-solid fa-certificate"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">Sertifikatlar</div>
+                <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_certificates }}</h3>
+                <div class="small text-muted mt-2">
+                    <span class="text-info fw-bold">100%</span> QR himoyalangan
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. EduCoin & XP Gamifikatsiyasi -->
+        <div class="col-sm-6 col-lg">
+            <div class="stat-kpi-card">
+                <div class="kpi-icon-wrap bg-danger bg-opacity-10 text-danger">
+                    <i class="fa-solid fa-coins"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">EduCoin Tangalar</div>
+                <h3 class="fw-bold text-dark mt-1 mb-0">🪙 {{ total_educoins }}</h3>
+                <div class="small text-muted mt-2">
+                    <span class="text-warning fw-bold"><i class="fa-solid fa-bolt"></i> {{ total_xp }}</span> XP ball
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📈 CHART.JS GRAFIKLARI (2x2 Grid) -->
+    <div id="charts-section" class="row g-4 mb-5">
+        <!-- 1. Yo'nalishlar (Sohalar) Ulushi -->
+        <div class="col-lg-6">
+            <div class="chart-container-card">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="fa-solid fa-chart-pie text-primary me-2"></i>To'garaklar Yo'nalishlari Tahlili</h5>
+                        <p class="text-muted small mb-0">IT, Xorijiy Tillar, Milliy Fanlar, Aniq Fanlar va Sport taqsimoti</p>
+                    </div>
+                    <span class="badge bg-light text-dark border">{{ total_courses }} ta to'garak</span>
+                </div>
+                <div class="chart-canvas-wrapper d-flex align-items-center justify-content-center">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Mashg'ulot Kunlari Jadvali -->
+        <div class="col-lg-6">
+            <div class="chart-container-card">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="fa-solid fa-calendar-week text-success me-2"></i>Dars Kunlari (Grafik) Taqsimoti</h5>
+                        <p class="text-muted small mb-0">Toq kunlar, Juft kunlar va Hafta oxiri bo'yicha guruhlar soni</p>
+                    </div>
+                    <span class="badge bg-success bg-opacity-10 text-success fw-bold">Online darslar</span>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="scheduleChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. TOP Ustozlar: Maosh va O'quvchilar soni -->
+        <div class="col-lg-7">
+            <div class="chart-container-card">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="fa-solid fa-sack-dollar text-warning me-2"></i>TOP O'qituvchilar: Oylik Maosh va O'quvchilar</h5>
+                        <p class="text-muted small mb-0">Maosh miqdori (mln so'm) hamda jalb qilingan o'quvchilar qiyosiy grafigi</p>
+                    </div>
+                    <span class="badge bg-warning bg-opacity-10 text-warning fw-bold">5 - 15 mln so'm</span>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="teacherSalaryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Talabalar Test Natijalari Sifati -->
+        <div class="col-lg-5">
+            <div class="chart-container-card">
+                <div class="card-header-clean">
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="fa-solid fa-bullseye text-danger me-2"></i>Test Natijalari Sifati (%)</h5>
+                        <p class="text-muted small mb-0">O'quvchilarning imtihon ko'rsatkichlari darajalari</p>
+                    </div>
+                    <span class="badge bg-info bg-opacity-10 text-info fw-bold">O'rtacha: {{ avg_quiz_score }}%</span>
+                </div>
+                <div class="chart-canvas-wrapper d-flex align-items-center justify-content-center">
+                    <canvas id="quizDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👨‍🏫 O'QITUVCHILAR STATISTIKASI VA JADVALI -->
+    <div id="teachers-section" class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+        <div class="card-header bg-white border-bottom p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-1 rounded-pill mb-1">
+                        <i class="fa-solid fa-chalkboard-user me-1"></i> Pedagoglar Tarkibi
+                    </span>
+                    <h4 class="fw-bold text-dark mb-0">O'qituvchilarning To'liq Statistikasi va Reytingi</h4>
+                    <p class="text-muted small mb-0">Oylik maoshi (5-15 mln), o'quvchilar soni, imtihon natijalari va KPI ko'rsatkichlari</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="text-end d-none d-md-block">
+                        <div class="small text-muted">O'rtacha Ustoz Maoshi</div>
+                        <div class="fw-bold text-success fs-5">{{ avg_teacher_salary|floatformat:0 }} so'm</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">O'qituvchi</th>
+                        <th>Mutaxassislik & Unvon</th>
+                        <th>Tajriba</th>
+                        <th>To'garaklari</th>
+                        <th>O'quvchilar</th>
+                        <th>O'rtacha Ball</th>
+                        <th>Oylik Maoshi</th>
+                        <th>KPI Reytingi</th>
+                        <th class="text-end pe-4">Profil</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in teachers_stats %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                {% if t.avatar_url %}
+                                    <img src="{{ t.avatar_url }}" alt="{{ t.name }}" class="teacher-avatar-table">
+                                {% else %}
+                                    <div class="teacher-avatar-table bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold">
+                                        {{ t.name|slice:":1" }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div class="fw-bold text-dark">{{ t.name }}</div>
+                                    <small class="text-muted">@{{ t.user.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-secondary small">{{ t.headline }}</div>
+                            <small class="text-muted">{{ t.specialties|truncatechars:35 }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                <i class="fa-solid fa-business-time text-primary me-1"></i> {{ t.experience_years }} yil
+                            </span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-dark">{{ t.courses_count }} ta</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-info bg-opacity-10 text-info fw-bold">
+                                <i class="fa-solid fa-users me-1"></i> {{ t.students_count }} nafar
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold text-success">{{ t.avg_score }}%</span>
+                                <div class="progress" style="width: 50px; height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: {{ t.avg_score }}%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="salary-badge">
+                                <i class="fa-solid fa-money-bill-wave"></i> {{ t.salary_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="kpi-badge-gold">
+                                <i class="fa-solid fa-star text-warning me-1"></i> {{ t.kpi_rating }}
+                            </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'teachers_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                Batafsil
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">Hozircha o'qituvchilar kiritilmagan.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-light p-3 text-muted small ps-4">
+            <i class="fa-solid fa-circle-info text-primary me-1"></i>
+            O'qituvchilar maoshi zamonaviy kasblar, tajriba va o'quvchilar soniga qarab 5 000 000 dan 15 000 000 so'mgacha adolatli belgilangan.
+        </div>
+    </div>
+
+    <!-- 🌐 KURS YO'NALISHLARI (Sohalar) VA KUNLAR TIZIMI -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="fa-solid fa-shapes text-primary me-2"></i>5 Asosiy Ta'lim Yo'nalishlari Bo'yicha Tahlil</h5>
+                        <p class="text-muted small mb-0">Platformada mavjud barcha to'garaklarning klasterlar bo'yicha ko'rsatkichlari</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    {% for cluster in cluster_stats %}
+                    <div class="col-md-6 col-xl-4">
+                        <div class="cluster-card" style="border-top: 4px solid {{ cluster.color }};">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="badge rounded-pill" style="background-color: {{ cluster.color }}1a; color: {{ cluster.color }};">
+                                    <i class="fa-solid {{ cluster.icon }} me-1"></i> Yo'nalish
+                                </span>
+                                <span class="fw-bold fs-5 text-dark">{{ cluster.course_count }} ta</span>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1">{{ cluster.name }}</h6>
+                            <p class="text-muted small mb-3">{{ cluster.categories_list }}</p>
+                            <div class="d-flex justify-content-between small text-muted pt-2 border-top">
+                                <span>O'rtacha narx:</span>
+                                <span class="fw-bold text-dark">{{ cluster.avg_price|floatformat:0 }} so'm</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mashg'ulot kunlari va Chegirmalar samadorligi -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <h5 class="fw-bold mb-1"><i class="fa-solid fa-tags text-danger me-2"></i>Paket Chegirmalar Tahlili</h5>
+                <p class="text-muted small mb-4">Bir vaqtning o'zida bir nechta to'garakka qatnashish imtiyozlari</p>
+
+                <div class="p-3 rounded-3 bg-light border mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-bold text-secondary">2 ta Kursga A'zo bo'lganda</span>
+                        <span class="badge bg-danger">-50 000 so'm</span>
+                    </div>
+                    <div class="small text-muted">Toq va juft kunlarni birlashtirish qulayligi</div>
+                </div>
+
+                <div class="p-3 rounded-3 bg-light border mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-bold text-secondary">3 ta Kursga A'zo bo'lganda</span>
+                        <span class="badge bg-danger">-100 000 so'm</span>
+                    </div>
+                    <div class="small text-muted">Kasb + Xorijiy til + Sport kombinatsiyasi</div>
+                </div>
+
+                <div class="bg-primary bg-opacity-10 p-3 rounded-3 text-center mt-auto">
+                    <div class="text-uppercase small fw-bold text-primary mb-1">Talabalar Tejab Qolgan Mablag'</div>
+                    <h3 class="fw-extrabold text-primary mb-0">{{ total_discounts_saved|floatformat:0 }} so'm</h3>
+                    <div class="small text-muted mt-1">Paketli maxsus chegirmalar evaziga</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🏆 TALABALAR STATISTIKASI VA GAMIFIKATSIYA -->
+    <div class="row g-4 mb-4">
+        <!-- TOP XP Talabalari -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-dark">
+                        <i class="fa-solid fa-bolt text-warning me-2"></i>TOP XP Yetakchilari
+                    </h6>
+                    <a href="{% url 'leaderboard' %}" class="small text-primary text-decoration-none fw-semibold">Barchasi &rarr;</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for student in top_xp_students %}
+                    <div class="list-group-item px-0 py-2 d-flex align-items-center justify-content-between border-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge {% if forloop.counter == 1 %}bg-warning text-dark{% elif forloop.counter == 2 %}bg-secondary text-light{% elif forloop.counter == 3 %}bg-danger text-light{% else %}bg-light text-muted{% endif %} rounded-circle px-2 py-1">
+                                {{ forloop.counter }}
+                            </span>
+                            <span class="fw-semibold text-dark">{{ student.get_full_name|default:student.username }}</span>
+                        </div>
+                        <span class="badge bg-warning bg-opacity-10 text-dark fw-bold">
+                            {{ student.total_xp }} XP
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">Hozircha ma'lumot yo'q.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP EduCoin Egasi -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-dark">
+                        <i class="fa-solid fa-coins text-warning me-2"></i>TOP EduCoin Sohiblari
+                    </h6>
+                    <a href="{% url 'coin_shop' %}" class="small text-primary text-decoration-none fw-semibold">Do'konga &rarr;</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for student in top_coin_students %}
+                    <div class="list-group-item px-0 py-2 d-flex align-items-center justify-content-between border-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light text-muted rounded-circle px-2 py-1">
+                                {{ forloop.counter }}
+                            </span>
+                            <span class="fw-semibold text-dark">{{ student.get_full_name|default:student.username }}</span>
+                        </div>
+                        <span class="badge bg-amber bg-opacity-10 text-warning fw-bold border">
+                            🪙 {{ student.edu_coins }} Coin
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">Hozircha ma'lumot yo'q.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Yaqinda Berilgan Sertifikatlar -->
+        <div class="col-md-12 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-dark">
+                        <i class="fa-solid fa-stamp text-info me-2"></i>So'nggi Sertifikatlar
+                    </h6>
+                    <span class="badge bg-success bg-opacity-10 text-success">Rasmiy</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for cert in recent_certificates %}
+                    <div class="list-group-item px-0 py-2 border-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold text-dark small">{{ cert.user.get_full_name|default:cert.user.username }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">{{ cert.course.title|truncatechars:28 }}</div>
+                            </div>
+                            <a href="{% url 'certificate_detail' cert.certificate_code %}" class="btn btn-outline-info btn-xs py-1 px-2 rounded-pill" style="font-size: 0.75rem;" target="_blank">
+                                Ko'rish
+                            </a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">Hozircha berilgan sertifikatlar yo'q.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // 1. Kurs Yo'nalishlari Diagrammasi (Doughnut)
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ category_chart_labels_json|safe }},
+            datasets: [{
+                data: {{ category_chart_counts_json|safe }},
+                backgroundColor: {{ category_chart_colors_json|safe }},
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 14,
+                        font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 }
+                    }
+                }
+            },
+            cutout: '65%'
+        }
+    });
+
+    // 2. Dars Kunlari Jadvali (Bar Chart)
+    const scheduleCtx = document.getElementById('scheduleChart').getContext('2d');
+    new Chart(scheduleCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ schedule_chart_labels_json|safe }},
+            datasets: [{
+                label: "To'garaklar soni",
+                data: {{ schedule_chart_counts_json|safe }},
+                backgroundColor: [
+                    'rgba(99, 102, 241, 0.85)',
+                    'rgba(6, 182, 212, 0.85)',
+                    'rgba(16, 185, 129, 0.85)',
+                    'rgba(249, 115, 22, 0.85)'
+                ],
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+
+    // 3. TOP O'qituvchilar: Oylik Maosh va O'quvchilar Soni (Grouped Bar)
+    const teacherSalaryCtx = document.getElementById('teacherSalaryChart').getContext('2d');
+    new Chart(teacherSalaryCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_teacher_names_json|safe }},
+            datasets: [
+                {
+                    label: "Oylik Maosh (mln so'm)",
+                    data: {{ chart_teacher_salaries_json|safe }},
+                    backgroundColor: 'rgba(245, 158, 11, 0.85)',
+                    borderRadius: 6,
+                    yAxisID: 'y'
+                },
+                {
+                    label: "O'quvchilar soni",
+                    data: {{ chart_teacher_students_json|safe }},
+                    backgroundColor: 'rgba(79, 70, 229, 0.85)',
+                    borderRadius: 6,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { boxWidth: 12, font: { family: "'Plus Jakarta Sans', sans-serif" } }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: { display: true, text: "Maosh (mln so'm)" },
+                    beginAtZero: true
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: { display: true, text: "O'quvchilar soni" },
+                    grid: { drawOnChartArea: false },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // 4. Test Natijalari Sifati (PolarArea / Pie)
+    const quizDistCtx = document.getElementById('quizDistributionChart').getContext('2d');
+    new Chart(quizDistCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ quiz_dist_labels_json|safe }},
+            datasets: [{
+                data: {{ quiz_dist_counts_json|safe }},
+                backgroundColor: [
+                    '#10b981', // A'lo
+                    '#3b82f6', // Yaxshi
+                    '#f59e0b', // O'rtacha
+                    '#ef4444'  // Qayta
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        font: { family: "'Plus Jakarta Sans', sans-serif", size: 10 }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
