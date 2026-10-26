@@ -1,0 +1,299 @@
+{% extends 'lms/base.html' %}
+
+{% block title %}{{ current_lesson.title }} — {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="bg-slate-900 text-white border-b border-slate-800">
+    <div class="max-w-[1700px] mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'course_detail' course.slug %}" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition" title="Kurs sahifasiga qaytish">
+                <i class="fas fa-arrow-left text-xs"></i>
+            </a>
+            <div>
+                <h1 class="text-sm md:text-base font-bold text-white truncate max-w-md md:max-w-xl">
+                    {{ course.title }}
+                </h1>
+                <p class="text-xs text-slate-400">
+                    {{ current_lesson.module.title }} &bull; {{ current_lesson.order }}-dars: {{ current_lesson.title }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Progress Mini Bar -->
+        <div class="hidden sm:flex items-center gap-4">
+            <div class="text-right">
+                <p class="text-xs font-semibold text-slate-300">Kurs progressi: <span class="text-emerald-400 font-mono">{{ progress_data.overall_percentage }}%</span></p>
+                <div class="w-36 bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
+                    <div class="bg-emerald-500 h-1.5 rounded-full" style="width: {{ progress_data.overall_percentage }}%"></div>
+                </div>
+            </div>
+            {% if progress_data.certificate %}
+            <a href="{% url 'certificate_detail' progress_data.certificate.certificate_id %}" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold transition flex items-center gap-1.5">
+                <i class="fas fa-award"></i> Sertifikat
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Main Classroom Layout (Left: Video & Notes, Right: Accordion Sidebar) -->
+<div class="max-w-[1700px] mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left: Classroom Stage (Player + Lesson Notes) -->
+        <div class="lg:col-span-8 space-y-6">
+            
+            <!-- Video Stage Container -->
+            <div class="rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl relative">
+                {% if current_lesson.embed_video_url %}
+                <div class="relative w-full aspect-video">
+                    <iframe src="{{ current_lesson.embed_video_url }}" class="absolute inset-0 w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                {% else %}
+                <!-- Aesthetic Placeholder Player -->
+                <div class="w-full aspect-video bg-gradient-to-tr from-slate-950 via-indigo-950 to-slate-900 flex flex-col items-center justify-center p-8 text-center">
+                    <div class="w-20 h-20 rounded-3xl bg-indigo-600/30 border border-indigo-500/40 text-indigo-400 flex items-center justify-center text-3xl mb-4 shadow-xl">
+                        <i class="fas fa-file-code"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">{{ current_lesson.title }}</h3>
+                    <p class="text-sm text-slate-400 max-w-md">
+                        Ushbu dars amaliy nazariya va kod namunalaridan iborat. Quyida batafsil ma'lumotlar bilan tanishishingiz mumkin.
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Player Action Toolbar -->
+                <div class="p-4 md:p-5 bg-slate-900 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-semibold">
+                            <i class="fas fa-clock mr-1 text-slate-400"></i> {{ current_lesson.duration_minutes }} daqiqa
+                        </span>
+                        {% if is_current_completed %}
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold">
+                            <i class="fas fa-circle-check"></i> Bajarildi
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Navigation and Complete Buttons -->
+                    <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                        {% if prev_lesson %}
+                        <a href="{% url 'classroom' course.slug prev_lesson.id %}" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center gap-1.5">
+                            <i class="fas fa-chevron-left text-[10px]"></i> Oldingi
+                        </a>
+                        {% endif %}
+
+                        {% if not is_current_completed %}
+                        <a href="{% url 'complete_lesson' current_lesson.id %}" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/20 transition flex items-center gap-2">
+                            <i class="fas fa-check"></i> Darsni Tugatdim (+15 XP)
+                        </a>
+                        {% else %}
+                        <span class="px-4 py-2.5 rounded-xl bg-slate-800/60 text-slate-400 text-xs font-semibold cursor-default">
+                            ✓ Dars Tugatilgan
+                        </span>
+                        {% endif %}
+
+                        {% if next_lesson %}
+                        <a href="{% url 'classroom' course.slug next_lesson.id %}" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/20 transition flex items-center gap-1.5">
+                            Keyingi <i class="fas fa-chevron-right text-[10px]"></i>
+                        </a>
+                        {% elif current_module_quiz %}
+                        <a href="{% url 'quiz_detail' current_module_quiz.id %}" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold shadow-lg transition flex items-center gap-1.5">
+                            <i class="fas fa-stopwatch"></i> Modul Testini Boshlash
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Lesson Notes & Study Content -->
+            <div class="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm space-y-6">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-900 mb-2">
+                        {{ current_lesson.title }}
+                    </h2>
+                    <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                        <span>{{ current_lesson.module.title }}</span>
+                        <span>&bull;</span>
+                        <span>Mavzu: {{ current_lesson.order }}-qism</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-6">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-600 mb-3">Dars Matni va Kod Namunasi</h3>
+                    <div class="prose max-w-none text-slate-800 leading-relaxed text-sm md:text-base space-y-4">
+                        {{ current_lesson.content|linebreaks }}
+                    </div>
+                </div>
+
+                <!-- Modul Quiz CTA Banner (if all lessons completed or at end) -->
+                {% if current_module_quiz %}
+                <div class="p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl shadow">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900">{{ current_module_quiz.title }}</h4>
+                            <p class="text-xs text-slate-600">
+                                Vaqt: {{ current_module_quiz.time_limit_minutes }} daqiqa | O'tish bali: {{ current_module_quiz.passing_score }}% | 
+                                <span class="font-semibold text-amber-700">Keyingi modulni ochish uchun shart!</span>
+                            </p>
+                        </div>
+                    </div>
+                    <a href="{% url 'quiz_detail' current_module_quiz.id %}" class="w-full sm:w-auto px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs shadow-md transition text-center whitespace-nowrap">
+                        Testni Topshirish
+                    </a>
+                </div>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <!-- Right: Modules & Lessons Accordion (Udemy / Coursera Sidebar) -->
+        <div class="lg:col-span-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden sticky top-24">
+                
+                <div class="p-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                    <div>
+                        <h2 class="font-bold text-slate-900 text-base">Kurs Mundarijasi</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">{{ progress_data.completed_lessons }}/{{ progress_data.total_lessons }} dars tugallandi</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm font-extrabold text-indigo-600 font-mono">{{ progress_data.overall_percentage }}%</span>
+                    </div>
+                </div>
+
+                <!-- Accordion of Modules -->
+                <div class="divide-y divide-slate-100 max-h-[calc(100vh-220px)] overflow-y-auto">
+                    {% for m_info in progress_data.modules_data %}
+                    <div x-data="{ open: {% if m_info.module.id == current_lesson.module.id %}true{% else %}false{% endif %} }">
+                        
+                        <!-- Module Accordion Header -->
+                        <button @click="open = !open" class="w-full text-left p-4 flex items-center justify-between hover:bg-slate-50 transition select-none {% if m_info.module.id == current_lesson.module.id %}bg-indigo-50/40{% endif %}">
+                            <div class="flex items-center gap-3 pr-2">
+                                <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold
+                                    {% if m_info.is_passed %} bg-emerald-100 text-emerald-700
+                                    {% elif m_info.is_unlocked %} bg-indigo-100 text-indigo-700
+                                    {% else %} bg-slate-100 text-slate-400 {% endif %}">
+                                    {% if m_info.is_passed %}
+                                    <i class="fas fa-check"></i>
+                                    {% elif m_info.is_unlocked %}
+                                    {{ m_info.module.order }}
+                                    {% else %}
+                                    <i class="fas fa-lock"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-xs md:text-sm line-clamp-1">
+                                        {{ m_info.module.title }}
+                                    </h3>
+                                    <div class="flex items-center gap-2 text-[10px] text-slate-500">
+                                        <span>{{ m_info.lessons|length }} dars</span>
+                                        {% if not m_info.is_unlocked %}
+                                        <span class="text-rose-500 font-semibold">• Qulflangan 🔒</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <i class="fas fa-chevron-down text-slate-400 text-xs transition-transform duration-200" :class="{ 'rotate-180': open }"></i>
+                        </button>
+
+                        <!-- Lessons List Inside Module -->
+                        <div x-show="open" class="bg-slate-50/70 border-t border-slate-100 divide-y divide-slate-100">
+                            {% for l_info in m_info.lessons %}
+                            <div class="p-3 pl-5 flex items-center justify-between text-xs transition
+                                {% if l_info.lesson.id == current_lesson.id %} bg-indigo-100/60 font-bold border-l-4 border-indigo-600
+                                {% else %} hover:bg-slate-100/80 {% endif %}">
+                                
+                                <div class="flex items-center gap-2.5 overflow-hidden">
+                                    <span class="flex-shrink-0 text-xs
+                                        {% if l_info.is_completed %} text-emerald-600
+                                        {% elif l_info.lesson.id == current_lesson.id %} text-indigo-600 animate-pulse
+                                        {% elif l_info.is_accessible %} text-slate-400
+                                        {% else %} text-slate-300 {% endif %}">
+                                        {% if l_info.is_completed %}
+                                        <i class="fas fa-circle-check"></i>
+                                        {% elif l_info.lesson.id == current_lesson.id %}
+                                        <i class="fas fa-play"></i>
+                                        {% elif l_info.is_accessible %}
+                                        <i class="far fa-circle"></i>
+                                        {% else %}
+                                        <i class="fas fa-lock"></i>
+                                        {% endif %}
+                                    </span>
+
+                                    {% if l_info.is_accessible %}
+                                    <a href="{% url 'classroom' course.slug l_info.lesson.id %}" class="truncate text-slate-800 hover:text-indigo-600 {% if l_info.lesson.id == current_lesson.id %}text-indigo-700 font-bold{% endif %}">
+                                        {{ l_info.lesson.order }}. {{ l_info.lesson.title }}
+                                    </a>
+                                    {% else %}
+                                    <span class="truncate text-slate-400 cursor-not-allowed">
+                                        {{ l_info.lesson.order }}. {{ l_info.lesson.title }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                <span class="text-[10px] text-slate-400 font-mono ml-2 flex-shrink-0">
+                                    {{ l_info.lesson.duration_minutes }}m
+                                </span>
+                            </div>
+                            {% endfor %}
+
+                            <!-- Module Quiz Row In Sidebar -->
+                            {% if m_info.quiz_info %}
+                            <div class="p-3 pl-5 flex items-center justify-between text-xs bg-amber-50/50 border-t border-amber-200/40">
+                                <div class="flex items-center gap-2.5 overflow-hidden">
+                                    <span class="flex-shrink-0 text-xs
+                                        {% if m_info.quiz_info.is_passed %} text-emerald-600
+                                        {% elif m_info.quiz_info.is_accessible %} text-amber-600
+                                        {% else %} text-slate-300 {% endif %}">
+                                        {% if m_info.quiz_info.is_passed %}
+                                        <i class="fas fa-circle-check"></i>
+                                        {% elif m_info.quiz_info.is_accessible %}
+                                        <i class="fas fa-stopwatch"></i>
+                                        {% else %}
+                                        <i class="fas fa-lock"></i>
+                                        {% endif %}
+                                    </span>
+
+                                    {% if m_info.quiz_info.is_accessible %}
+                                    <a href="{% url 'quiz_detail' m_info.quiz_info.quiz.id %}" class="truncate font-bold text-amber-800 hover:text-amber-900">
+                                        Test: {{ m_info.quiz_info.quiz.title }}
+                                    </a>
+                                    {% else %}
+                                    <span class="truncate text-slate-400 font-medium cursor-not-allowed">
+                                        Test: {{ m_info.quiz_info.quiz.title }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                {% if m_info.quiz_info.is_passed %}
+                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
+                                    {{ m_info.quiz_info.best_attempt.percentage }}%
+                                </span>
+                                {% elif m_info.quiz_info.is_accessible %}
+                                <span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                                    70%
+                                </span>
+                                {% else %}
+                                <span class="text-[10px] text-slate-400">🔒</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

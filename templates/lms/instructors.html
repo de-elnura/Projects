@@ -1,0 +1,72 @@
+{% extends 'lms/base.html' %}
+
+{% block title %}Ustozlar va Murabbiylar — EduQuiz / SkillUp{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-b from-slate-900 to-indigo-950 text-white py-12 md:py-16 text-center">
+    <div class="max-w-4xl mx-auto px-4 space-y-4">
+        <span class="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold uppercase tracking-wider inline-block">
+            Professional Jamoadoshlar
+        </span>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
+            Tajribali Ustozlarimiz
+        </h1>
+        <p class="text-slate-300 text-sm max-w-xl mx-auto leading-relaxed">
+            Sanoatda ko'p yillik amaliy tajribaga ega ekspertlar va amaliyotchi mutaxassislar
+        </p>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for ins in instructors %}
+        <div class="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm hover:shadow-xl transition flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-4 mb-4">
+                    {% if ins.user.avatar_url %}
+                        <img src="{{ ins.user.avatar_url }}" alt="{{ ins.user.get_full_name|default:ins.user.username }}" class="w-16 h-16 rounded-2xl object-cover shadow-lg border-2 border-indigo-200 flex-shrink-0">
+                    {% else %}
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-700 text-white font-extrabold text-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20 flex-shrink-0">
+                            {{ ins.user.first_name|default:ins.user.username|make_list|first|upper }}
+                        </div>
+                    {% endif %}
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">{{ ins.user.get_full_name|default:ins.user.username }}</h3>
+                        <p class="text-xs font-semibold text-indigo-600">{{ ins.headline|default:"SkillUp Eksperti" }}</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">
+                            {{ ins.user.instructed_courses.count }} ta kurs &bull; {{ ins.xp_points }} XP
+                        </p>
+                    </div>
+                </div>
+
+                <p class="text-slate-600 text-xs leading-relaxed line-clamp-3 mb-6">
+                    {{ ins.bio|default:"Dasturlash va zamonaviy texnologiyalar bo'yicha kuchli amaliy tajribaga ega yetakchi mutaxassis." }}
+                </p>
+
+                <!-- Instructor's Courses list -->
+                <div class="space-y-2">
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">O'tadigan kurslari:</p>
+                    {% for c in ins.user.instructed_courses.all %}
+                    <a href="{% url 'course_detail' c.slug %}" class="block p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50/70 border border-slate-100 text-xs font-semibold text-slate-800 hover:text-indigo-600 transition truncate">
+                        <i class="fas fa-play text-indigo-500 mr-1.5 text-[10px]"></i> {{ c.title }}
+                    </a>
+                    {% empty %}
+                    <p class="text-xs text-slate-400 italic">Hali kurslar yuklanmagan</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+                <span class="text-[11px] font-bold text-slate-500">
+                    <i class="fas fa-envelope text-slate-400 mr-1"></i> {{ ins.user.email }}
+                </span>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-3 text-center py-12 text-slate-500">
+            Hozircha ustozlar ro'yxati mavjud emas.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

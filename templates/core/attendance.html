@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Davomat Jurnali (Attendance Tracking) — SkillUp{% endblock %}
+
+{% block extra_css %}
+<style>
+    .att-header {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2.25rem 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 25px rgba(30, 41, 59, 0.2);
+    }
+    .status-btn-radio {
+        display: none;
+    }
+    .status-btn-label {
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0.4rem 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #475569;
+    }
+    .status-btn-radio:checked + .label-present {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+    }
+    .status-btn-radio:checked + .label-excused {
+        background: #f59e0b;
+        color: white;
+        border-color: #f59e0b;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+    }
+    .status-btn-radio:checked + .label-absent {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+    }
+    .danger-alert-badge {
+        animation: pulse-danger 1.5s infinite;
+    }
+    @keyframes pulse-danger {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="att-header">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="badge bg-success text-white px-3 py-1 rounded-pill fw-bold mb-2">
+                    <i class="fa-solid fa-clipboard-check me-1"></i> Elektron Davomat Jurnali
+                </span>
+                <h2 class="fw-extrabold mb-1">Dars Davomati va Qatnashuv Monitoringi</h2>
+                <p class="text-light opacity-90 mb-0 small">
+                    O'qituvchi va ma'murlar uchun 1-bosishda butun guruhga davomat qilish hamda dars qoldiruvchilarni aniqlash
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'erp_dashboard' %}" class="btn btn-outline-light rounded-pill px-3">
+                    <i class="fa-solid fa-gauge-high me-1"></i> ERP Dashboard
+                </a>
+                <a href="{% url 'timetable' %}" class="btn btn-outline-light rounded-pill px-3">
+                    <i class="fa-solid fa-calendar-days me-1"></i> Dars Jadvali
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🚨 3 KUN KETMA-KET QOLDIRGANLAR OGOHLANTIRISHI -->
+    {% if consecutive_absence_alerts %}
+    <div class="alert alert-danger border-danger border-opacity-50 rounded-4 shadow-sm mb-4 p-3">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="fa-solid fa-triangle-exclamation text-danger fa-lg danger-alert-badge"></i>
+            <strong class="text-danger">OGOHLANTIRISH: {{ consecutive_absence_alerts|length }} nafar o'quvchi 3 kun ketma-ket darsga kelmadi!</strong>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            {% for a in consecutive_absence_alerts %}
+            <span class="badge bg-white text-danger border border-danger p-2 rounded-3">
+                <i class="fa-solid fa-user-xmark me-1"></i> {{ a.student.get_full_name|default:a.student.username }} ({{ a.group.name }})
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- GURUH VA SANA TANLASH FORMASI -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+        <form method="GET" class="row g-3 align-items-center">
+            <div class="col-md-6 col-lg-5">
+                <label class="form-label small fw-bold text-muted mb-1"><i class="fa-solid fa-users text-primary me-1"></i> O'quv Guruhini Tanlang:</label>
+                <select name="group_id" class="form-select rounded-3 fw-semibold" onchange="this.form.submit()">
+                    {% for g in active_groups %}
+                        <option value="{{ g.id }}" {% if selected_group.id == g.id %}selected{% endif %}>
+                            {{ g.name }} &bull; {{ g.teacher.get_full_name|default:g.teacher.username }} ({{ g.room.name|default:"Xona" }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4 col-lg-4">
+                <label class="form-label small fw-bold text-muted mb-1"><i class="fa-solid fa-calendar-day text-success me-1"></i> Dars Sanasi:</label>
+                <input type="date" name="date" class="form-control rounded-3 fw-semibold" value="{{ selected_date }}" onchange="this.form.submit()">
+            </div>
+
+            <div class="col-md-2 col-lg-3 d-flex align-items-end pt-3">
+                <button type="button" class="btn btn-outline-success fw-bold w-100 rounded-3 py-2" onclick="markAllPresent()">
+                    <i class="fa-solid fa-check-double me-1"></i> Barchasini "Keldi" Qilish
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- DAVOMAT RO'YXATI FORMASI -->
+    {% if selected_group %}
+    <form method="POST" action="{% url 'attendance_group' selected_group.id %}?date={{ selected_date }}">
+        {% csrf_token %}
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+            <div class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fa-solid fa-clipboard-user text-primary me-2"></i> {{ selected_group.name }}
+                    </h5>
+                    <small class="text-muted">
+                        Ustoz: <strong>{{ selected_group.teacher.get_full_name|default:selected_group.teacher.username }}</strong>
+                        &bull; Xona: <strong>{{ selected_group.room.name|default:"101-xona" }}</strong>
+                        &bull; Vaqti: <strong>{{ selected_group.start_time }} - {{ selected_group.end_time }}</strong>
+                    </small>
+                </div>
+                <div>
+                    <span class="badge bg-light text-dark border px-3 py-2">
+                        Sana: <strong class="text-primary">{{ selected_date }}</strong>
+                    </span>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Talaba Ismi</th>
+                            <th>Holat & Xavf Indikatori</th>
+                            <th>Davomat Belgilash</th>
+                            <th>Izoh / Sabab</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in students_list %}
+                        <tr>
+                            <td class="ps-4 text-muted fw-bold">{{ forloop.counter }}</td>
+                            <td>
+                                <strong class="text-dark">{{ item.student.get_full_name|default:item.student.username }}</strong>
+                                <small class="d-block text-muted">@{{ item.student.username }}</small>
+                            </td>
+                            <td>
+                                {% if item.has_danger_alert %}
+                                    <span class="badge bg-danger rounded-pill px-3 py-1.5 danger-alert-badge shadow-sm">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> 3 kun ketma-ket qoldirdi!
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-light text-success border">
+                                        <i class="fa-solid fa-circle-check"></i> Muntazam qatnashuvchi
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <!-- Keldi -->
+                                    <input type="radio" class="status-btn-radio radio-present" name="status_{{ item.student.id }}" id="present_{{ item.student.id }}" value="present" {% if item.status == 'present' %}checked{% endif %}>
+                                    <label class="status-btn-label label-present" for="present_{{ item.student.id }}">
+                                        <i class="fa-solid fa-check me-1"></i> Keldi
+                                    </label>
+
+                                    <!-- Sababli -->
+                                    <input type="radio" class="status-btn-radio radio-excused" name="status_{{ item.student.id }}" id="excused_{{ item.student.id }}" value="excused" {% if item.status == 'excused' %}checked{% endif %}>
+                                    <label class="status-btn-label label-excused" for="excused_{{ item.student.id }}">
+                                        <i class="fa-solid fa-circle-info me-1"></i> Sababli
+                                    </label>
+
+                                    <!-- Sababsiz -->
+                                    <input type="radio" class="status-btn-radio radio-absent" name="status_{{ item.student.id }}" id="absent_{{ item.student.id }}" value="absent" {% if item.status == 'absent' %}checked{% endif %}>
+                                    <label class="status-btn-label label-absent" for="absent_{{ item.student.id }}">
+                                        <i class="fa-solid fa-xmark me-1"></i> Sababsiz
+                                    </label>
+                                </div>
+                            </td>
+                            <td>
+                                <input type="text" name="notes_{{ item.student.id }}" class="form-control form-control-sm rounded-3" placeholder="Masalan: Shamollagan..." value="{{ item.notes }}">
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Ushbu guruhga hali talabalar biriktirilmagan.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer bg-light p-3 d-flex justify-content-between align-items-center">
+                <span class="small text-muted">
+                    <i class="fa-solid fa-circle-info text-primary me-1"></i> Qaydlar avtomatik markaz monitoring hisobotlariga kiritiladi.
+                </span>
+                <button type="submit" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Davomatni Saqlash
+                </button>
+            </div>
+        </div>
+    </form>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markAllPresent() {
+    const presentRadios = document.querySelectorAll('.radio-present');
+    presentRadios.forEach(r => {
+        r.checked = true;
+    });
+}
+</script>
+{% endblock %}

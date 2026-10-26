@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+
+{% block title %}Paketli To'garaklar Tanlovi (-50k / -100k Chegirma) — SkillUp{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bundle-hero {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+        border-radius: 24px;
+        color: #ffffff;
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 15px 35px -5px rgba(49, 46, 129, 0.3);
+    }
+
+    .bundle-course-item {
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 1.25rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .bundle-course-item:hover {
+        border-color: #6366f1;
+        box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.15);
+    }
+
+    .bundle-course-item.selected {
+        border-color: #4f46e5;
+        background: linear-gradient(135deg, #ffffff, #eef2ff);
+        box-shadow: 0 8px 24px -4px rgba(79, 70, 229, 0.2);
+    }
+
+    .bundle-course-item.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: #f8fafc;
+    }
+
+    .sticky-summary {
+        position: sticky;
+        top: 90px;
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        border-radius: 22px;
+        padding: 1.75rem;
+        box-shadow: 0 12px 30px -6px rgba(0,0,0,0.08);
+    }
+
+    .discount-banner {
+        background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        color: #166534;
+        border: 1px solid #86efac;
+        padding: 0.85rem 1.25rem;
+        border-radius: 14px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 max-w-6xl">
+
+    <!-- Hero Banner -->
+    <div class="bundle-hero text-center text-md-start">
+        <div class="row align-items-center g-4">
+            <div class="col-md-8">
+                <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-3 shadow-sm">
+                    <i class="fa-solid fa-tags me-1"></i> Maxsus Paket Chegirmalari
+                </span>
+                <h1 class="display-6 fw-extrabold text-white mb-2">Paketli To'garaklar Tanlovi</h1>
+                <p class="lead text-light opacity-90 mb-0">
+                    O'zingizga qiziq bo'lgan to'garaklarni tanlang: 
+                    <strong class="text-warning">2 ta kursga 50 000 so'm</strong>, 
+                    <strong class="text-warning">3 ta va undan ko'piga esa 100 000 so'm</strong> avtomatik chegirma oling! 
+                    Barcha mashg'ulotlar <strong>ertadan</strong> online boshlanadi.
+                </p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="p-3 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-25">
+                    <div class="text-warning fs-1 mb-1">🎁</div>
+                    <div class="fw-bold text-white fs-5">Ko'proq o'rganing</div>
+                    <small class="text-light opacity-75">Har bir to'garak uchun +40 🪙 EduCoin bonusi</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form for Bundle Enrollment -->
+    <form method="POST" action="{% url 'process_bundle_payment' %}" id="bundleForm">
+        {% csrf_token %}
+        <div class="row g-4">
+            
+            <!-- CHAP TOMON: To'garaklar Ro'yxati (Checkboxes) -->
+            <div class="col-lg-7 col-xl-8">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold text-dark mb-0">
+                        <i class="fa-solid fa-shapes text-primary me-2"></i> Mavjud To'garaklar (17 ta Yo'nalish)
+                    </h4>
+                    <span class="text-muted small">Kerakli to'garaklarni belgilang</span>
+                </div>
+
+                <div class="row g-3">
+                    {% for course in courses %}
+                        <div class="col-12">
+                            <label class="bundle-course-item d-flex align-items-center justify-content-between w-100 mb-0 {% if course.id in enrolled_course_ids %}disabled{% endif %}" id="item-label-{{ course.id }}">
+                                <div class="d-flex align-items-center gap-3">
+                                    {% if course.id in enrolled_course_ids %}
+                                        <input type="checkbox" class="form-check-input fs-4 m-0" disabled checked>
+                                    {% else %}
+                                        <input 
+                                            type="checkbox" 
+                                            name="selected_courses" 
+                                            value="{{ course.id }}" 
+                                            data-price="{{ course.get_effective_price }}" 
+                                            data-title="{{ course.title }}" 
+                                            class="form-check-input course-checkbox fs-4 m-0"
+                                            id="chk-{{ course.id }}"
+                                            onchange="updateBundleSummary()"
+                                        >
+                                    {% endif %}
+
+                                    <img src="{{ course.thumbnail_url|default:'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600' }}" alt="{{ course.title }}" class="rounded-3 object-fit-cover d-none d-sm-block" style="width: 75px; height: 55px;">
+
+                                    <div>
+                                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                            <span class="badge bg-light text-primary border small">{{ course.category }}</span>
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle small">
+                                                <i class="fa-regular fa-clock me-1"></i> {{ course.get_schedule_display_full }}
+                                            </span>
+                                            {% if course.is_modern_profession %}
+                                                <span class="badge bg-warning text-dark small fw-bold">
+                                                    <i class="fa-solid fa-bolt"></i> Zamonaviy Kasb
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">{{ course.title }}</h6>
+                                        <small class="text-muted">
+                                            Ustoz: <strong>{{ course.author.get_full_name }}</strong> &bull; Oyligi: {{ course.author.get_salary_display }}
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="text-end ps-3">
+                                    {% if course.id in enrolled_course_ids %}
+                                        <span class="badge bg-success-subtle text-success fw-bold px-3 py-2 rounded-pill">
+                                            <i class="fa-solid fa-circle-check me-1"></i> Siz A'zosiz
+                                        </span>
+                                    {% else %}
+                                        <div class="fs-5 fw-extrabold text-success">
+                                            {{ course.get_effective_price|floatformat:0 }} so'm
+                                        </div>
+                                        <small class="text-muted d-block" style="font-size: 0.75rem;">oylik to'lov</small>
+                                    {% endif %}
+                                </div>
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- O'NG TOMON: Hisob-Kitob va To'lov Paneli (Sticky) -->
+            <div class="col-lg-5 col-xl-4">
+                <div class="sticky-summary">
+                    <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom">
+                        <i class="fa-solid fa-receipt text-primary me-2"></i> A'zolik Hisob-Kitobi
+                    </h5>
+
+                    <!-- Tanlangan kurslar ro'yxati -->
+                    <div id="selectedCoursesList" class="mb-3">
+                        <p class="text-muted small text-center py-3 mb-0" id="emptyNotice">
+                            Hozircha hech qanday to'garak tanlanmadi.<br>
+                            Chap tomondan to'garaklarni belgilang.
+                        </p>
+                    </div>
+
+                    <!-- Chegirma Banneri -->
+                    <div id="discountBox" class="discount-banner mb-3" style="display: none;">
+                        <i class="fa-solid fa-sparkles fa-lg"></i>
+                        <span id="discountText">-50 000 so'm chegirma berildi!</span>
+                    </div>
+
+                    <div class="py-2 border-top border-bottom mb-3 small">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Tanlangan to'garaklar:</span>
+                            <strong id="selectedCountText">0 ta</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Umumiy to'lov:</span>
+                            <span id="originalPriceText" class="fw-bold text-dark">0 so'm</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 text-success" id="discountRow" style="display: none;">
+                            <span>Paketli chegirma:</span>
+                            <strong id="discountAmountText">-0 so'm</strong>
+                        </div>
+                    </div>
+
+                    <!-- Yakuniy To'lov -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <div class="text-uppercase small fw-bold text-muted">Jami to'lanadi:</div>
+                            <small class="text-success fw-semibold"><i class="fa-solid fa-calendar-check me-1"></i> Ertadan boshlanadi</small>
+                        </div>
+                        <div class="fs-3 fw-extrabold text-primary" id="finalPriceText">
+                            0 so'm
+                        </div>
+                    </div>
+
+                    <!-- To'lov Tizimi Tanlovi -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-dark mb-2">To'lov Tizimini Tanlang (Demo):</label>
+                        <div class="d-grid gap-2">
+                            <label class="btn btn-outline-primary d-flex align-items-center justify-content-between py-2 active">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="payment_method" value="click" checked class="form-check-input m-0">
+                                    <span class="fw-bold">Click Evolution</span>
+                                </div>
+                                <span class="badge bg-primary text-white">0% komissiya</span>
+                            </label>
+                            <label class="btn btn-outline-success d-flex align-items-center justify-content-between py-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="payment_method" value="payme" class="form-check-input m-0">
+                                    <span class="fw-bold">Payme</span>
+                                </div>
+                                <span class="badge bg-success text-white">Tezkor</span>
+                            </label>
+                            <label class="btn btn-outline-dark d-flex align-items-center justify-content-between py-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="payment_method" value="uzum" class="form-check-input m-0">
+                                    <span class="fw-bold">Uzum Bank</span>
+                                </div>
+                                <span class="badge bg-dark text-white">Xavfsiz</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Boshlash Tugmasi -->
+                    <button type="submit" class="btn btn-primary-custom w-100 py-3 fw-bold fs-6 shadow" id="submitBtn" disabled>
+                        <i class="fa-solid fa-bolt me-2"></i> Hoziroq To'lov Qilib Ertadan Boshlash
+                    </button>
+                    <small class="text-muted d-block text-center mt-2" style="font-size: 0.75rem;">
+                        Demo simulyatsiya: haqiqiy pul yechilmaydi, a'zolik darhol tasdiqlanadi.
+                    </small>
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+</div>
+
+<script>
+    function updateBundleSummary() {
+        const checkboxes = document.querySelectorAll('.course-checkbox:checked');
+        const count = checkboxes.length;
+        
+        let totalPrice = 0;
+        let selectedListHtml = '';
+
+        checkboxes.forEach(cb => {
+            const price = parseInt(cb.getAttribute('data-price')) || 0;
+            const title = cb.getAttribute('data-title');
+            totalPrice += price;
+
+            selectedListHtml += `
+                <div class="d-flex justify-content-between align-items-center small py-1 text-dark">
+                    <span class="text-truncate me-2" style="max-width: 200px;">&bull; ${title}</span>
+                    <strong class="text-muted">${price.toLocaleString()} so'm</strong>
+                </div>
+            `;
+
+            // Active visual style on container
+            document.getElementById(`item-label-${cb.value}`).classList.add('selected');
+        });
+
+        // Remove active style from unchecked
+        document.querySelectorAll('.course-checkbox:not(:checked)').forEach(cb => {
+            const el = document.getElementById(`item-label-${cb.value}`);
+            if (el) el.classList.remove('selected');
+        });
+
+        // Calculate Bundle Discounts:
+        // 2 courses -> 50,000 so'm
+        // 3+ courses -> 100,000 so'm
+        let discount = 0;
+        let discountMsg = '';
+
+        if (count === 2) {
+            discount = 50000;
+            discountMsg = '🎉 2 ta to\'garak uchun 50 000 so\'m chegirma qo\'llandi!';
+        } else if (count >= 3) {
+            discount = 100000;
+            discountMsg = '🔥 3 ta va undan ko\'p to\'garak uchun 100 000 so\'m chegirma qo\'llandi!';
+        }
+
+        const finalPrice = Math.max(0, totalPrice - discount);
+
+        // Update DOM elements
+        const listContainer = document.getElementById('selectedCoursesList');
+        const emptyNotice = document.getElementById('emptyNotice');
+        const discountBox = document.getElementById('discountBox');
+        const discountText = document.getElementById('discountText');
+        const discountRow = document.getElementById('discountRow');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (count > 0) {
+            listContainer.innerHTML = selectedListHtml;
+            submitBtn.disabled = false;
+        } else {
+            listContainer.innerHTML = `
+                <p class="text-muted small text-center py-3 mb-0" id="emptyNotice">
+                    Hozircha hech qanday to'garak tanlanmadi.<br>
+                    Chap tomondan to'garaklarni belgilang.
+                </p>
+            `;
+            submitBtn.disabled = true;
+        }
+
+        document.getElementById('selectedCountText').innerText = `${count} ta to'garak`;
+        document.getElementById('originalPriceText').innerText = `${totalPrice.toLocaleString()} so'm`;
+        document.getElementById('finalPriceText').innerText = `${finalPrice.toLocaleString()} so'm`;
+
+        if (discount > 0) {
+            discountBox.style.display = 'flex';
+            discountText.innerText = discountMsg;
+            discountRow.style.display = 'flex';
+            document.getElementById('discountAmountText').innerText = `-${discount.toLocaleString()} so'm`;
+        } else {
+            discountBox.style.display = 'none';
+            discountRow.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

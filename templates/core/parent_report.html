@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Ota-onalar Uchun O'zlashtirish Ma'lumotnomasi — {{ student.get_full_name|default:student.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        background: #ffffff;
+        max-width: 880px;
+        margin: 2rem auto;
+        padding: 3rem 3.5rem;
+        border: 2px solid #0f172a;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+        position: relative;
+    }
+    .report-header {
+        border-bottom: 2px solid #0f172a;
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .seal-stamp {
+        border: 2px dashed #059669;
+        color: #059669;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin: 0 auto;
+    }
+    @media print {
+        .navbar-custom, footer, .no-print {
+            display: none !important;
+        }
+        body {
+            background-color: white !important;
+            margin: 0;
+            padding: 0;
+        }
+        .report-card {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 1.5cm !important;
+            max-width: 100% !important;
+        }
+        @page {
+            size: A4 portrait;
+            margin: 1cm;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Chop etish tugmasi -->
+    <div class="d-flex justify-content-between align-items-center max-w-4xl mx-auto mb-3 no-print">
+        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i> Profilga qaytish
+        </a>
+        <button onclick="window.print()" class="btn btn-primary-custom px-4 py-2 shadow">
+            <i class="fa-solid fa-print me-2"></i> Ma'lumotnomani Chop Etish / PDF Saqlash
+        </button>
+    </div>
+
+    <!-- Rasmiy Ma'lumotnoma Qog'ozi -->
+    <div class="report-card">
+        <!-- Bosh qismi / Logotip -->
+        <div class="report-header">
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                <i class="fa-solid fa-graduation-cap fa-2x text-primary"></i>
+                <h3 class="fw-bold mb-0 text-dark">SKILLUP &bull; EDUQUIZ XALQARO ONLAYN AKADEMIYASI</h3>
+            </div>
+            <p class="text-muted small mb-1">O'zbekiston Respublikasi Raqamli Ta'lim Standartlari Asosida</p>
+            <h4 class="fw-bold text-uppercase mt-3 mb-0" style="letter-spacing: 1px; color: #1e1b4b;">
+                O'QUVCHINING O'ZLASHTIRISH VA INTIZOM MA'LUMOTNOMASI
+            </h4>
+            <small class="text-muted">(Hurmatli ota-onalar va vasiylar e'tiboriga)</small>
+        </div>
+
+        <!-- Talaba ma'lumotlari -->
+        <div class="bg-light p-3 rounded-3 border mb-4">
+            <div class="row g-2">
+                <div class="col-sm-6">
+                    <span class="text-muted small">O'quvchi ismi-sharifi:</span>
+                    <div class="fw-bold fs-5 text-dark">{{ student.get_full_name|default:student.username }}</div>
+                </div>
+                <div class="col-sm-3">
+                    <span class="text-muted small">Foydalanuvchi ID:</span>
+                    <div class="fw-semibold">@{{ student.username }}</div>
+                </div>
+                <div class="col-sm-3">
+                    <span class="text-muted small">Hujjat sanasi:</span>
+                    <div class="fw-semibold">{{ report_date|date:"d.m.Y" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Asosiy Ko'rsatkichlar Jadvali -->
+        <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-column text-primary me-2"></i> Asosiy O'quv Ko'rsatkichlari</h5>
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered align-middle">
+                <tbody>
+                    <tr>
+                        <td class="bg-light fw-semibold" style="width: 45%;">Tugatilgan amaliy darslar soni:</td>
+                        <td class="fw-bold text-success fs-6">{{ completed_count }} ta dars</td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light fw-semibold">Topshirilgan modul imtihonlari:</td>
+                        <td class="fw-bold text-primary fs-6">{{ quiz_results.count }} ta test</td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light fw-semibold">Imtihonlardagi o'rtacha ko'rsatkich:</td>
+                        <td class="fw-bold fs-5 {% if avg_score >= 70 %}text-success{% else %}text-warning{% endif %}">
+                            {{ avg_score }}% {% if avg_score >= 85 %}(A'lo daraja 🌟){% elif avg_score >= 70 %}(Yaxshi 👍){% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light fw-semibold">To'plangan umumiy ball (Tajriba / XP):</td>
+                        <td class="fw-bold text-warning fs-5">{{ student.total_xp }} XP</td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light fw-semibold">Respublika talabalari reytingidagi o'rni:</td>
+                        <td class="fw-bold text-dark">#{{ rank }}-o'rin</td>
+                    </tr>
+                    <tr>
+                        <td class="bg-light fw-semibold">Qo'lga kiritilgan rasmiy sertifikatlar:</td>
+                        <td class="fw-bold text-dark">{{ certificates.count }} ta tasdiqlangan diplom</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Murabbiylar Tavsifnomasi -->
+        <h5 class="fw-bold text-dark mb-2"><i class="fa-solid fa-comment-dots text-primary me-2"></i> Murabbiylar va Ma'muriyat Xulosasi:</h5>
+        <div class="p-3 border rounded-3 bg-white mb-4" style="line-height: 1.7; font-size: 0.95rem;">
+            O'quvchi <strong>{{ student.get_full_name|default:student.username }}</strong> dars jarayonlarida faol qatnashib kelmoqda. Berilgan amaliy topshiriqlarni mustaqil va o'z vaqtida bajaradi. Har bir modul yakunidagi interaktiv testlarda yuqori natijalarni qayd etib, ta'lim standartlariga to'liq javob bermoqda. Ota-onalariga ta'limga qaratayotgan yuksak e'tiborlari uchun minnatdorchilik bildiramiz.
+        </div>
+
+        <!-- Pastki Imzolar va Muhr -->
+        <div class="row align-items-end mt-5 pt-4 border-top">
+            <div class="col-4 text-center">
+                <div class="fw-bold text-dark">Anvar Qodirov</div>
+                <div class="border-top border-dark mt-2 pt-1 text-muted small">Katta Ilmiy Rahbar</div>
+            </div>
+            <div class="col-4 text-center">
+                <div class="seal-stamp">
+                    <i class="fa-solid fa-stamp fa-2x mb-1"></i>
+                    <span>SKILLUP LMS<br>TASDIQLANGAN</span>
+                </div>
+            </div>
+            <div class="col-4 text-center">
+                <div class="fw-bold text-dark">Akademiya Ma'muriyati</div>
+                <div class="border-top border-dark mt-2 pt-1 text-muted small">Mas'ul Shaxs Imzosi</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

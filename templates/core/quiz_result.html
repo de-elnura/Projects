@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Natija: {{ quiz.title }} — SkillUp{% endblock %}
+
+{% block content %}
+<div class="container py-5 max-w-4xl">
+    <!-- Natija Xulosasi Kartochkasi -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 text-center p-4 p-md-5">
+        {% if is_passed %}
+            <div class="mb-3">
+                <i class="fa-solid fa-trophy fa-5x text-warning"></i>
+            </div>
+            <span class="badge bg-success-subtle text-success fs-6 px-3 py-2 rounded-pill fw-bold mb-2">
+                <i class="fa-solid fa-check me-1"></i> Imtihondan Muvaffaqiyatli O'tdingiz!
+            </span>
+            <h2 class="fw-bold text-dark mt-2">Tabriklaymiz, Ajoyib Natija!</h2>
+            <p class="text-muted lead">Siz testni muvaffaqiyatli topshirdingiz va keyingi modulga yo'llanma oldingiz.</p>
+        {% else %}
+            <div class="mb-3">
+                <i class="fa-solid fa-circle-xmark fa-5x text-danger"></i>
+            </div>
+            <span class="badge bg-danger-subtle text-danger fs-6 px-3 py-2 rounded-pill fw-bold mb-2">
+                <i class="fa-solid fa-xmark me-1"></i> O'tish bali yetarli emas
+            </span>
+            <h2 class="fw-bold text-dark mt-2">Afsuski, O'tish Bali To'planmadi</h2>
+            <p class="text-muted lead">Keyingi modul darslarini ochish uchun kamida {{ quiz.passing_score }}% to'plashingiz kerak.</p>
+        {% endif %}
+
+        <!-- Ko'rsatkichlar jadvali -->
+        <div class="row g-3 justify-content-center my-3">
+            <div class="col-6 col-md-2">
+                <div class="p-3 bg-light rounded-3 border h-100">
+                    <div class="text-muted small">To'plangan Ball</div>
+                    <div class="fs-3 fw-bold {% if is_passed %}text-success{% else %}text-danger{% endif %}">{{ score }}%</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="p-3 bg-light rounded-3 border h-100">
+                    <div class="text-muted small">O'tish Bali</div>
+                    <div class="fs-3 fw-bold text-secondary">{{ quiz.passing_score }}%</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <div class="p-3 bg-light rounded-3 border h-100">
+                    <div class="text-muted small">To'g'ri Javoblar</div>
+                    <div class="fs-3 fw-bold text-primary">{{ correct_count }} / {{ total_questions }}</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="p-3 bg-light rounded-3 border h-100">
+                    <div class="text-muted small">Qo'shilgan XP</div>
+                    <div class="fs-3 fw-bold text-warning">+{{ xp_earned }} XP</div>
+                </div>
+            </div>
+            {% if coins_earned > 0 %}
+                <div class="col-12 col-md-3">
+                    <div class="p-3 rounded-3 border h-100" style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border-color: #fcd34d !important;">
+                        <div class="text-warning-emphasis small fw-bold">EduCoin Mukofoti</div>
+                        <div class="fs-3 fw-extrabold text-warning-emphasis">+{{ coins_earned }} 🪙</div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if course_coins > 0 %}
+            <div class="alert alert-warning py-3 px-4 rounded-4 my-3 text-center shadow-sm">
+                <i class="fa-solid fa-graduation-cap fa-lg text-warning me-2"></i>
+                <strong>TABRIKLAYMIZ!</strong> Kursni to'liq bitirib Sertifikat olganingiz uchun hamyoningizga 
+                <span class="badge bg-warning text-dark fs-6 px-3 py-1 rounded-pill fw-bold">+{{ course_coins }} 🪙 EduCoin</span> qo'shildi!
+            </div>
+        {% endif %}
+
+        <!-- Tugmalar -->
+        <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+            {% if is_passed %}
+                <a href="{% url 'course_list' %}" class="btn btn-outline-secondary px-4 py-2">
+                    <i class="fa-solid fa-list me-1"></i> Kurslar ro'yxatiga qaytish
+                </a>
+                <a href="{% url 'classroom' quiz.module.lessons.first.id %}" class="btn btn-primary-custom px-4 py-2">
+                    <i class="fa-solid fa-arrow-right me-1"></i> Darslarga o'tish
+                </a>
+            {% else %}
+                <a href="{% url 'take_quiz' quiz.id %}" class="btn btn-warning fw-bold px-4 py-2">
+                    <i class="fa-solid fa-rotate-right me-1"></i> Qaytadan urinib ko'rish
+                </a>
+                <a href="{% url 'classroom' quiz.module.lessons.first.id %}" class="btn btn-outline-secondary px-4 py-2">
+                    <i class="fa-solid fa-book me-1"></i> Darslarni takrorlash
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Savollar bo'yicha batafsil hisobot -->
+    <div class="bg-white p-4 rounded-4 shadow-sm border">
+        <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-clipboard-check text-primary me-2"></i> Savollar va Javoblar Tahlili</h4>
+
+        {% for item in detailed_results %}
+            <div class="p-3 mb-3 rounded-3 border {% if item.is_correct %}border-success bg-success-subtle bg-opacity-10{% else %}border-danger bg-danger-subtle bg-opacity-10{% endif %}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="fw-bold">{{ forloop.counter }}-savol: {{ item.question.text }}</span>
+                    {% if item.is_correct %}
+                        <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i> To'g'ri</span>
+                    {% else %}
+                        <span class="badge bg-danger"><i class="fa-solid fa-xmark me-1"></i> Noto'g'ri</span>
+                    {% endif %}
+                </div>
+
+                <div class="small">
+                    <div>
+                        <span class="text-muted">Sizning javobingiz:</span>
+                        <strong class="{% if item.is_correct %}text-success{% else %}text-danger{% endif %}">
+                            {{ item.selected_choice.text|default:"Javob berilmadi" }}
+                        </strong>
+                    </div>
+                    {% if not item.is_correct and item.correct_choice %}
+                        <div class="text-success mt-1">
+                            <span class="text-muted">To'g'ri javob:</span>
+                            <strong>{{ item.correct_choice.text }}</strong>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

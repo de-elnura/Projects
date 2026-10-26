@@ -1,0 +1,169 @@
+{% extends 'lms/base.html' %}
+
+{% block title %}Mening Profilim — EduQuiz / SkillUp{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    
+    <!-- User Profile Header Card -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+        
+        <div class="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+            <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-black text-3xl flex items-center justify-center shadow-xl">
+                {{ user.first_name|default:user.username|make_list|first|upper }}
+            </div>
+            <div class="space-y-1">
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                    <h1 class="text-2xl font-extrabold text-slate-900">{{ user.get_full_name|default:user.username }}</h1>
+                    <span class="px-3 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold">
+                        {{ profile.get_role_display }}
+                    </span>
+                </div>
+                <p class="text-sm font-semibold text-slate-500">{{ profile.headline|default:"SkillUp Talabasi" }}</p>
+                <p class="text-xs text-slate-400">A'zo bo'lgan: {{ user.date_joined|date:"d.m.Y" }} &bull; {{ user.email }}</p>
+            </div>
+        </div>
+
+        <!-- Badges & XP -->
+        <div class="flex items-center gap-4">
+            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200/80 text-center min-w-[110px]">
+                <p class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Umumiy XP</p>
+                <p class="text-2xl font-extrabold text-amber-900 font-mono mt-0.5">{{ profile.xp_points }}</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200/80 text-center min-w-[110px]">
+                <p class="text-[11px] font-bold text-indigo-800 uppercase tracking-wider">Unvon</p>
+                <p class="text-xs font-bold text-indigo-900 mt-1">{{ profile.rank_title }}</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Enrolled Courses & Progress -->
+    <div>
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-slate-900">Mening Kurslarim ({{ courses_stats|length }})</h2>
+            <a href="{% url 'catalog' %}" class="text-xs font-bold text-indigo-600 hover:text-indigo-700">Yangi kurs qo'shish &rarr;</a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for item in courses_stats %}
+            <div class="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+                        <span class="font-bold text-indigo-600">{{ item.course.category.name|default:"Umumiy" }}</span>
+                        <span>Yozilgan: {{ item.enrolled_at|date:"d.m.Y" }}</span>
+                    </div>
+
+                    <h3 class="text-lg font-bold text-slate-900 mb-3">
+                        {{ item.course.title }}
+                    </h3>
+
+                    <div class="space-y-1.5 mb-6">
+                        <div class="flex justify-between text-xs font-bold text-slate-700">
+                            <span>O'zlashtirish</span>
+                            <span class="text-indigo-600 font-mono">{{ item.progress.overall_percentage }}%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ item.progress.overall_percentage }}%"></div>
+                        </div>
+                        <div class="flex justify-between text-[11px] text-slate-400">
+                            <span>{{ item.progress.completed_lessons }}/{{ item.progress.total_lessons }} dars</span>
+                            <span>{{ item.progress.passed_quizzes }}/{{ item.progress.total_quizzes }} test</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
+                    <a href="{% url 'classroom_default' item.course.slug %}" class="flex-grow py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-center text-xs shadow-md transition">
+                        Darsni Davom Ettirish
+                    </a>
+                    {% if item.progress.certificate %}
+                    <a href="{% url 'certificate_detail' item.progress.certificate.certificate_id %}" class="py-2.5 px-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold rounded-xl text-xs transition" title="Sertifikatni ko'rish">
+                        <i class="fas fa-award"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-2 text-center py-12 bg-white rounded-3xl border border-slate-200">
+                <i class="fas fa-book-reader text-3xl text-slate-300 mb-2"></i>
+                <p class="text-slate-600 font-semibold text-sm">Hozircha birorta kursga yozilmagansiz.</p>
+                <a href="{% url 'catalog' %}" class="mt-4 inline-block px-5 py-2.5 bg-indigo-600 text-white font-bold rounded-xl text-xs">
+                    Katalogdan Kurs Tanlash
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Certificates Gallery -->
+    <div>
+        <h2 class="text-xl font-bold text-slate-900 mb-6">Mening Sertifikatlarim ({{ certificates|length }})</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for cert in certificates %}
+            <div class="bg-gradient-to-tr from-amber-500/10 via-amber-500/5 to-white rounded-3xl p-6 border border-amber-300/80 shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl mb-4 shadow-lg shadow-amber-500/20">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
+                        {{ cert.formatted_id }}
+                    </span>
+                    <h3 class="text-base font-bold text-slate-900 mt-2 mb-1">
+                        {{ cert.course.title }}
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-4">
+                        Berilgan sana: {{ cert.issue_date|date:"d.m.Y" }}
+                    </p>
+                </div>
+                <a href="{% url 'certificate_detail' cert.certificate_id %}" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs text-center shadow transition flex items-center justify-center gap-2">
+                    <i class="fas fa-eye"></i> Sertifikatni Ko'rish & Chop Etish
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-span-3 text-center py-10 bg-white rounded-3xl border border-slate-200">
+                <i class="fas fa-award text-3xl text-slate-300 mb-2"></i>
+                <p class="text-slate-500 text-xs">Hozircha qo'lga kiritilgan sertifikatlar yo'q. Kursdagi barcha modullar va testlarni 70%+ ga topshiring!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recent Quiz Attempts -->
+    <div>
+        <h2 class="text-xl font-bold text-slate-900 mb-6">So'nggi Imtihon Urinishlari</h2>
+        <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+            <div class="divide-y divide-slate-100">
+                {% for att in attempts %}
+                <div class="p-4 sm:p-5 flex items-center justify-between text-xs sm:text-sm">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs
+                            {% if att.passed %} bg-emerald-100 text-emerald-700 {% else %} bg-rose-100 text-rose-700 {% endif %}">
+                            {% if att.passed %}✓{% else %}✗{% endif %}
+                        </span>
+                        <div>
+                            <p class="font-bold text-slate-900">{{ att.quiz.title }}</p>
+                            <p class="text-xs text-slate-400">{{ att.completed_at|date:"d.m.Y H:i" }} &bull; {{ att.quiz.module.course.title }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <span class="font-mono font-bold {% if att.passed %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                            {{ att.percentage }}%
+                        </span>
+                        <a href="{% url 'quiz_result' att.id %}" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition">
+                            Tahlil
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center text-slate-400 text-xs">
+                    Hali birorta test topshirilmadi.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'lms/base.html' %}
+
+{% block title %}O'qituvchi Studiyasi (Teacher Studio) — EduQuiz / SkillUp{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    
+    <!-- Dashboard Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Ustoz Paneli</span>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">O'qituvchi Studiyasi</h1>
+            <p class="text-slate-500 text-sm mt-1">O'zingiz yaratgan kurslar, darslar va imtihonlarni boshqaring</p>
+        </div>
+
+        <a href="{% url 'teacher_course_create' %}" class="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 text-sm">
+            <i class="fas fa-plus"></i> Yangi Kurs Yaratish
+        </a>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg mb-3">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Mening Kurslarim</p>
+            <p class="text-2xl font-black text-slate-900 mt-1">{{ courses.count }} ta</p>
+        </div>
+
+        <div class="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg mb-3">
+                <i class="fas fa-users"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Jami O'quvchilar</p>
+            <p class="text-2xl font-black text-slate-900 mt-1">{{ total_students }} nafar</p>
+        </div>
+
+        <div class="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg mb-3">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Jami Darslar & Testlar</p>
+            <p class="text-2xl font-black text-slate-900 mt-1">{{ total_lessons }} dars / {{ total_quizzes }} test</p>
+        </div>
+    </div>
+
+    <!-- My Courses List -->
+    <div class="space-y-6">
+        <h2 class="text-xl font-bold text-slate-900">Kurslarim Ro'yxati</h2>
+
+        <div class="space-y-6">
+            {% for c in courses %}
+            <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden" x-data="{ expanded: false }">
+                
+                <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0">
+                            {% if c.thumbnail_url %}
+                            <img src="{{ c.thumbnail_url }}" alt="{{ c.title }}" class="w-full h-full object-cover">
+                            {% else %}
+                            <div class="w-full h-full bg-indigo-600 text-white flex items-center justify-center text-xl">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">{{ c.category.name|default:"Umumiy" }}</span>
+                            <h3 class="text-lg font-bold text-slate-900">{{ c.title }}</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                {{ c.modules.count }} ta modul &bull; {{ c.total_lessons_count }} ta dars &bull; {{ c.enrollments.count }} o'quvchi
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a href="{% url 'course_detail' c.slug %}" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+                            <i class="fas fa-eye mr-1"></i> Ko'rish
+                        </a>
+                        <a href="{% url 'teacher_module_create' c.id %}" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition">
+                            <i class="fas fa-folder-plus mr-1"></i> + Modul
+                        </a>
+                        <button @click="expanded = !expanded" class="px-3.5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition flex items-center gap-1.5">
+                            <span x-text="expanded ? 'Yopish' : 'Tarkibni boshqarish'"></span>
+                            <i class="fas fa-chevron-down text-[10px] transition" :class="{ 'rotate-180': expanded }"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Expanded Course Details (Modules, Lessons, Quiz Actions) -->
+                <div x-show="expanded" x-cloak class="border-t border-slate-100 bg-slate-50/70 p-6 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-bold uppercase tracking-wider text-slate-700">Modullar va Testlar:</h4>
+                        <a href="{% url 'teacher_module_create' c.id %}" class="text-xs font-bold text-indigo-600 hover:underline">
+                            + Yangi Modul Qo'shish
+                        </a>
+                    </div>
+
+                    <div class="space-y-4">
+                        {% for mod in c.modules.all %}
+                        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm space-y-3">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div>
+                                    <h5 class="text-sm font-bold text-slate-900">{{ mod.order }}-Modul: {{ mod.title }}</h5>
+                                    <p class="text-xs text-slate-500">O'tish chegarasi: {{ mod.pass_percentage }}%</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <a href="{% url 'teacher_lesson_create' mod.id %}" class="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition">
+                                        + Dars Qo'shish
+                                    </a>
+                                    {% if mod.quiz %}
+                                    <a href="{% url 'teacher_quiz_questions' mod.quiz.id %}" class="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 text-xs font-bold hover:bg-amber-100 transition">
+                                        Test Savollari ({{ mod.quiz.questions.count }})
+                                    </a>
+                                    {% else %}
+                                    <a href="{% url 'teacher_quiz_create' mod.id %}" class="px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition">
+                                        + Test Qo'shish
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Lessons inside Module -->
+                            <div class="pl-2 space-y-1.5">
+                                {% for les in mod.lessons.all %}
+                                <div class="flex items-center justify-between text-xs py-1 px-3 rounded-lg bg-slate-50 text-slate-700">
+                                    <span class="font-medium">
+                                        <i class="far fa-circle-play text-indigo-500 mr-2"></i> {{ les.order }}. {{ les.title }}
+                                    </span>
+                                    <span class="text-slate-400 font-mono">{{ les.duration_minutes }} daq</span>
+                                </div>
+                                {% empty %}
+                                <p class="text-xs text-slate-400 italic">Hozircha darslar yuklanmagan.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-slate-500 italic">Ushbu kursda hali modullar yo'q. Yuqoridagi "+ Yangi Modul Qo'shish" tugmasini bosing.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+            {% empty %}
+            <div class="p-16 text-center bg-white rounded-3xl border border-slate-200">
+                <i class="fas fa-chalkboard-user text-4xl text-slate-300 mb-3"></i>
+                <h3 class="text-lg font-bold text-slate-800">Siz hali birorta kurs yaratmadingiz</h3>
+                <p class="text-slate-500 text-sm mt-1">Yangi kurs yaratib talabalar uchun video darslik va imtihonlarni yuklang.</p>
+                <a href="{% url 'teacher_course_create' %}" class="mt-4 inline-block px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl text-xs shadow transition">
+                    + Birinchi Kursni Yaratish
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

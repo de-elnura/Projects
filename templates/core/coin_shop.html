@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+
+{% block title %}EduCoin Do'koni & Kvestlar — SkillUp{% endblock %}
+
+{% block extra_css %}
+<style>
+    .gamification-hero {
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+        border-radius: 24px;
+        color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 15px 35px -5px rgba(49, 46, 129, 0.4);
+    }
+
+    .gamification-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0) 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .coin-wallet-card {
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        padding: 1.75rem;
+        transition: transform 0.2s ease;
+    }
+
+    .coin-wallet-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .coin-huge-display {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fef08a, #f59e0b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .quest-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 1.25rem;
+        transition: all 0.25s ease;
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .quest-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
+        border-color: #cbd5e1;
+    }
+
+    .quest-card.completed {
+        background: linear-gradient(135deg, #ffffff, #f0fdf4);
+        border-color: #86efac;
+    }
+
+    .quest-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+    }
+
+    .shop-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 1.75rem;
+        transition: all 0.25s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    .shop-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.1);
+        border-color: #6366f1;
+    }
+
+    .shop-card.featured {
+        border: 2px solid #f59e0b;
+        background: linear-gradient(135deg, #ffffff, #fffbeb);
+    }
+
+    .shop-icon-box {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 1.25rem;
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+
+    .price-pill {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        color: #92400e;
+        font-weight: 800;
+        font-size: 1.15rem;
+        padding: 0.45rem 1rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border: 1px solid #fcd34d;
+    }
+
+    .pulse-glow {
+        animation: pulse-glow-btn 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-glow-btn {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+        50% { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+    }
+
+    .coupon-box {
+        background: #f8fafc;
+        border: 2px dashed #6366f1;
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 max-w-6xl">
+    
+    <!-- Hero / Balans va Hamyon Kartochkasi -->
+    <div class="gamification-hero p-4 p-md-5 mb-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-3 shadow-sm">
+                    <i class="fa-solid fa-coins me-1"></i> EduQuiz Gamifikatsiya & Rag'bat Tizimi
+                </span>
+                <h1 class="fw-extrabold display-5 mb-3 text-white">EduCoin Markazi & Do'koni</h1>
+                <p class="lead text-light opacity-90 mb-4">
+                    Bilim oling, darslarni tugating, testlarda 100% natija ko'rsating va maxsus 
+                    <strong>EduCoin (🪙)</strong> tangalarini to'plang! Ularni kurslar uchun -50% chegirmalar, 
+                    Oltin VIP maqomi va eksklyuziv sovg'alarga almashtiring.
+                </p>
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    {% if can_claim_streak %}
+                        <a href="{% url 'claim_daily_bonus' %}" class="btn btn-warning btn-lg fw-bold pulse-glow px-4 py-2.5 shadow">
+                            <i class="fa-solid fa-fire me-2"></i> Kunlik Bonusni Olish (+15 🪙)
+                        </a>
+                    {% else %}
+                        <button class="btn btn-light disabled px-4 py-2.5 fw-bold text-success border-0 shadow-sm" disabled>
+                            <i class="fa-solid fa-circle-check me-2 text-success"></i> Bugungi Kunlik Bonus Olingan ✅
+                        </button>
+                    {% endif %}
+                    <a href="#quests-section" class="btn btn-outline-light px-4 py-2.5 fw-semibold">
+                        <i class="fa-solid fa-list-check me-1"></i> 8 xil Kvestlar
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="coin-wallet-card text-center text-lg-start">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-uppercase small text-light opacity-75 fw-bold tracking-wider">Mening Hamyonim</span>
+                        {% if user.has_vip_badge %}
+                            <span class="badge bg-warning text-dark fw-bold px-2.5 py-1 rounded-pill">
+                                <i class="fa-solid fa-crown me-1"></i> Oltin VIP
+                            </span>
+                        {% else %}
+                            <span class="badge bg-white-50 text-white fw-normal px-2 py-0.5 rounded-pill small">Faol O'quvchi</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="coin-huge-display mb-2">
+                        <span>🪙</span>
+                        <span>{{ user.edu_coins }}</span>
+                    </div>
+                    <div class="text-light opacity-90 mb-3">
+                        Mavjud EduCoin tangalari &bull; Jami: <strong>{{ user.total_xp }} XP</strong>
+                    </div>
+
+                    <div class="pt-3 border-top border-white-50 d-flex justify-content-between align-items-center small text-light">
+                        <span>Kvestlar progressi:</span>
+                        <strong class="text-warning">{{ completed_quests_count }} / 8 bajarildi</strong>
+                    </div>
+                    <div class="progress mt-2" style="height: 8px; background: rgba(255,255,255,0.2);">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: {% widthratio completed_quests_count 8 100 %}%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8 XIL EDUCOIN YIG'ISH KVESTLARI (INTERAKTIV DOSKA) -->
+    <div id="quests-section" class="mb-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-2">
+            <div>
+                <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-1.5 rounded-pill mb-1">
+                    8 Xil Daromad Manbasi
+                </span>
+                <h3 class="fw-bold text-dark mb-0">EduCoin Yig'ish Kvestlari</h3>
+                <p class="text-muted small mb-0">Platformada har bir faoliyatingiz uchun EduCoin tangalari avtomatik beriladi:</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-light border text-dark px-3 py-2 rounded-pill fw-bold">
+                    <i class="fa-solid fa-trophy text-warning me-1"></i> Bajarildi: {{ completed_quests_count }} / 8
+                </span>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            {% for quest in quests %}
+                <div class="col-md-6 col-lg-3">
+                    <div class="quest-card {% if quest.is_completed %}completed{% endif %}">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="quest-icon-wrapper bg-{{ quest.badge_color }}-subtle text-{{ quest.badge_color }}">
+                                    <i class="{{ quest.icon }}"></i>
+                                </div>
+                                <span class="badge bg-warning-subtle text-warning-emphasis fw-extrabold border border-warning-subtle px-2.5 py-1 rounded-pill">
+                                    +{{ quest.reward }} 🪙
+                                </span>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1">#{{ quest.number }}. {{ quest.title }}</h6>
+                            <p class="text-muted small mb-3">{{ quest.desc }}</p>
+                        </div>
+
+                        <div class="pt-2 border-top">
+                            {% if quest.is_completed %}
+                                <div class="d-flex align-items-center justify-content-between text-success small fw-bold">
+                                    <span><i class="fa-solid fa-circle-check me-1"></i> Bajarilgan</span>
+                                    <span class="badge bg-success-subtle text-success">Tayyor</span>
+                                </div>
+                            {% else %}
+                                {% if quest.action_url %}
+                                    <a href="{% url quest.action_url %}" class="btn btn-sm btn-outline-primary w-100 fw-semibold">
+                                        {{ quest.action_label }} <i class="fa-solid fa-arrow-right ms-1 small"></i>
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary w-100 py-1.5">
+                                        {{ quest.action_label }}
+                                    </span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- SIZNING FAOL PROMOKODLARINGIZ (AGAR MAVJUD BO'LSA) -->
+    {% if unlocked_coupons %}
+    <div class="mb-5">
+        <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-ticket text-primary me-2"></i> Do'kondan Olingan Faol Promokodlaringiz</h4>
+        <div class="row g-3">
+            {% for cp in unlocked_coupons %}
+                <div class="col-md-6">
+                    <div class="coupon-box shadow-sm bg-white">
+                        <div>
+                            <div class="small text-muted mb-1">-{{ cp.discount_percent }}% Chegirma Kuponi</div>
+                            <code class="fs-5 fw-bold text-primary">{{ cp.code }}</code>
+                            <div class="small text-muted mt-1">Holati: {% if cp.is_valid %}<span class="text-success fw-semibold">Faol (Ishlatishga tayyor)</span>{% else %}<span class="text-secondary">Ishlatilgan</span>{% endif %}</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText('{{ cp.code }}'); alert('Promokod nusxalandi: {{ cp.code }}');">
+                            <i class="fa-solid fa-copy me-1"></i> Nusxa olish
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- EDUCOIN DO'KONI — SOVG'ALARNI XARID QILISH -->
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <span class="badge bg-warning text-dark fw-bold px-3 py-1.5 rounded-pill mb-1">
+                    <i class="fa-solid fa-gift me-1"></i> EduCoin Sovg'alar Vitrinasi
+                </span>
+                <h3 class="fw-bold text-dark mb-0">EduCoin Do'koni — Tangalarni Almashtiring</h3>
+                <p class="text-muted small mb-0">Yig'ilgan EduCoin tangalaringiz evaziga quyidagi afzalliklarni qo'lga kiriting:</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {% for item in items %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="shop-card {% if item.item_type == 'vip_badge' %}featured{% endif %}">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="shop-icon-box">
+                                    <i class="{{ item.icon }}"></i>
+                                </div>
+                                <div class="price-pill">
+                                    <span>🪙</span>
+                                    <span>{{ item.price_coins }}</span>
+                                </div>
+                            </div>
+                            <span class="badge bg-light text-secondary border mb-2">{{ item.get_item_type_display }}</span>
+                            <h5 class="fw-bold text-dark mb-2">{{ item.title }}</h5>
+                            <p class="text-muted small mb-4">{{ item.description }}</p>
+                        </div>
+
+                        <div>
+                            {% if item.item_type == 'vip_badge' and user.has_vip_badge %}
+                                <button class="btn btn-success w-100 fw-bold py-2 disabled" disabled>
+                                    <i class="fa-solid fa-crown me-1"></i> Sizda Oltin VIP Mavjud ✅
+                                </button>
+                            {% elif user.edu_coins < item.price_coins %}
+                                <button class="btn btn-light border text-muted w-100 fw-semibold py-2 disabled" disabled title="Tangalar yetarli emas">
+                                    <i class="fa-solid fa-lock me-1"></i> {{ item.price_coins }} 🪙 Kerak (Sizda: {{ user.edu_coins }})
+                                </button>
+                            {% else %}
+                                <form method="POST" action="{% url 'buy_shop_item' item.id %}" onsubmit="return confirm('Haqiqatdan ham {{ item.price_coins }} EduCoin sarflab ushbu mahsulotni sotib olmoqchimisiz?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary-custom w-100 fw-bold py-2 shadow-sm">
+                                        <i class="fa-solid fa-cart-shopping me-1"></i> Sotib olish ({{ item.price_coins }} 🪙)
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="bg-white p-5 rounded-4 text-center border">
+                        <i class="fa-solid fa-box-open fa-3x text-muted mb-2"></i>
+                        <h5 class="fw-bold text-dark">Hozircha mahsulotlar mavjud emas</h5>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- TRANZAKSIYALAR TARIXI -->
+    <div class="mb-5">
+        <h4 class="fw-bold text-dark mb-3">
+            <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> EduCoin Tranzaksiyalari Tarixi
+        </h4>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="py-3 px-4">Tadbir / Faoliyat</th>
+                            <th class="py-3">Tavsif</th>
+                            <th class="py-3 text-center">Tanga Miqdori</th>
+                            <th class="py-3 text-end px-4">Vaqti</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in user_transactions %}
+                            <tr>
+                                <td class="py-3 px-4">
+                                    <span class="badge {% if tx.amount > 0 %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} px-2.5 py-1 fw-bold">
+                                        {{ tx.get_action_type_display }}
+                                    </span>
+                                </td>
+                                <td class="py-3 fw-semibold text-dark">{{ tx.description }}</td>
+                                <td class="py-3 text-center fw-extrabold {% if tx.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if tx.amount > 0 %}+{{ tx.amount }}{% else %}{{ tx.amount }}{% endif %} 🪙
+                                </td>
+                                <td class="py-3 text-end px-4 text-muted small">{{ tx.created_at|date:"d.m.Y, H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    Hozircha tranzaksiyalar mavjud emas. Darslarni yakunlab EduCoin yig'ishni boshlang!
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

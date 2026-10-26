@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+
+{% block title %}Profil: {{ user.username }} — SkillUp{% endblock %}
+
+{% block extra_css %}
+<style>
+    .vip-card-glow {
+        border: 2px solid #f59e0b !important;
+        background: linear-gradient(135deg, #ffffff 0%, #fffdf5 100%) !important;
+        box-shadow: 0 12px 30px -5px rgba(245, 158, 11, 0.25) !important;
+    }
+
+    .vip-avatar-border {
+        border: 4px solid #f59e0b;
+        box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+    }
+
+    .educoin-stat-box {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border: 1px solid #fcd34d;
+        border-radius: 18px;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .quest-mini-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 max-w-5xl">
+    
+    <!-- Profil Bosh qismi (Asosiy Kartochka) -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white {% if user.has_vip_badge %}vip-card-glow{% endif %}">
+        <div class="row align-items-center">
+            <div class="col-md-auto text-center mb-3 mb-md-0 position-relative">
+                {% if user.avatar_url %}
+                    <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="rounded-circle object-fit-cover {% if user.has_vip_badge %}vip-avatar-border{% endif %}" style="width: 85px; height: 85px;">
+                {% else %}
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto {% if user.has_vip_badge %}vip-avatar-border{% endif %}" style="width: 85px; height: 85px; font-size: 2.2rem; font-weight: bold;">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                {% endif %}
+
+                {% if user.has_vip_badge %}
+                    <div class="position-absolute bottom-0 start-50 translate-middle-x">
+                        <span class="badge bg-warning text-dark fw-bold px-2 py-0.5 rounded-pill shadow-sm" style="font-size: 0.75rem;">
+                            <i class="fa-solid fa-crown"></i> VIP
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h3 class="fw-bold mb-0 text-dark">{{ user.get_full_name|default:user.username }}</h3>
+                            {% if user.has_vip_badge %}
+                                <span class="badge bg-warning text-dark fw-bold px-2.5 py-1 rounded-pill" title="Oltin VIP Nishoni">
+                                    <i class="fa-solid fa-crown text-dark"></i> Oltin VIP
+                                </span>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted mb-1">
+                            @{{ user.username }} &bull; {{ user.get_role_display }} &bull; {{ user.email }}
+                        </p>
+                        {% if user.headline %}
+                            <p class="text-primary fw-semibold small mb-1">
+                                <i class="fa-solid fa-briefcase me-1"></i> {{ user.headline }}
+                            </p>
+                        {% endif %}
+                        {% if user.bio %}
+                            <p class="text-secondary small mb-0">{{ user.bio }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-primary fw-semibold px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="fa-solid fa-user-pen me-1"></i> Profilni Tahrirlash
+                        </button>
+                        <a href="{% url 'parent_report' %}" class="btn btn-outline-dark fw-bold px-3 py-2 shadow-sm">
+                            <i class="fa-solid fa-file-invoice text-primary me-1"></i> Ota-onalar Hisoboti (PDF)
+                        </a>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold">
+                        <i class="fa-solid fa-bolt me-1"></i> {{ user.total_xp }} Jami XP
+                    </span>
+                    <span class="badge bg-light text-dark border px-3 py-1.5 rounded-pill">
+                        <i class="fa-solid fa-trophy me-1 text-warning"></i> Reytingda: #{{ user_rank }}
+                    </span>
+                    <span class="badge bg-light text-dark border px-3 py-1.5 rounded-pill">
+                        <i class="fa-solid fa-circle-check me-1 text-success"></i> {{ completed_lessons_count }} ta dars yakunlangan
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EduCoin Hamyoni & Kunlik Bonus Kartochkasi -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-6">
+                <div class="educoin-stat-box d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase small fw-bold text-dark opacity-75 mb-1">
+                            <i class="fa-solid fa-wallet me-1"></i> EduCoin Balansingiz
+                        </div>
+                        <div class="fs-2 fw-extrabold text-dark d-flex align-items-center gap-2">
+                            <span>🪙 {{ user.edu_coins }}</span>
+                            <small class="fs-6 fw-bold text-secondary">EduCoin</small>
+                        </div>
+                        <div class="small text-muted mt-1">Har bir dars, test va faollik uchun tangalar yig'iladi.</div>
+                    </div>
+                    <div>
+                        <a href="{% url 'coin_shop' %}" class="btn btn-dark fw-bold px-3 py-2 shadow-sm">
+                            <i class="fa-solid fa-store me-1 text-warning"></i> Do'konga o'tish
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="p-3 bg-light rounded-4 border">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-dark small"><i class="fa-solid fa-fire text-warning me-1"></i> Kunlik Faollik Bonusi (+15 🪙)</span>
+                        {% if can_claim_streak %}
+                            <span class="badge bg-warning text-dark fw-bold">Mavjud!</span>
+                        {% else %}
+                            <span class="badge bg-success text-white fw-bold">Bugun Olingan ✅</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-muted small mb-2">Har 24 soatda SkillUp platformasiga kirib kunlik tangani oling.</p>
+                    {% if can_claim_streak %}
+                        <a href="{% url 'claim_daily_bonus' %}" class="btn btn-warning w-100 fw-bold shadow-sm">
+                            <i class="fa-solid fa-gift me-1"></i> Bugungi +15 🪙 Bonusni Olish
+                        </a>
+                    {% else %}
+                        <button class="btn btn-outline-secondary w-100 disabled" disabled>
+                            <i class="fa-solid fa-check me-1"></i> Ertaga yana yangi bonus beriladi
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 8 xil Kvestlar progressi -->
+        <div class="mt-4 pt-3 border-top">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold text-dark small">
+                    <i class="fa-solid fa-list-check text-primary me-1"></i> 8 Xil EduCoin Kvestlari Progressi:
+                </span>
+                <span class="badge bg-primary text-white fw-bold">{{ completed_quests_count }} / 8 ta bajarildi</span>
+            </div>
+            <div class="progress mb-3" style="height: 8px;">
+                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" style="width: {% widthratio completed_quests_count 8 100 %}%;"></div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                {% for q in quests %}
+                    <span class="quest-mini-pill {% if q.is_completed %}bg-success-subtle text-success border border-success-subtle{% else %}bg-light text-muted border{% endif %}">
+                        {% if q.is_completed %}
+                            <i class="fa-solid fa-circle-check text-success"></i>
+                        {% else %}
+                            <i class="fa-regular fa-circle text-muted"></i>
+                        {% endif %}
+                        {{ q.title }} ({{ q.reward }})
+                    </span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sertifikatlar Bo'limi -->
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-award text-warning me-2"></i> Qo'lga kiritilgan Sertifikatlar</h4>
+            <span class="badge bg-secondary-subtle text-secondary">{{ certificates.count }} ta</span>
+        </div>
+
+        <div class="row g-4">
+            {% for cert in certificates %}
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100" style="background: linear-gradient(135deg, #ffffff, #fefce8); border-left: 6px solid #eab308 !important;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-warning text-dark fw-bold">Rasmiy Sertifikat</span>
+                            <small class="text-muted">{{ cert.issued_date|date:"d.m.Y" }}</small>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1">{{ cert.course.title }}</h5>
+                        <p class="text-muted small mb-3">ID: <code>{{ cert.certificate_code }}</code></p>
+                        <a href="{% url 'certificate_detail' cert.certificate_code %}" class="btn btn-sm btn-outline-dark fw-bold">
+                            <i class="fa-solid fa-eye me-1"></i> Sertifikatni ochish va chop etish
+                        </a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="bg-light p-4 rounded-4 text-center border">
+                        <i class="fa-solid fa-certificate fa-3x text-muted mb-2"></i>
+                        <h6 class="fw-bold text-dark">Hozircha sertifikatlar mavjud emas</h6>
+                        <p class="text-muted small mb-0">Kurslarning barcha modullarini va testlarini 70% dan yuqori ball bilan tamomlang va avtomatik sertifikat hamda +150 🪙 EduCoin oling.</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Faol Chegirma Kuponlari (Do'kondan sotib olingan bo'lsa) -->
+    {% if unlocked_coupons %}
+    <div class="mb-5">
+        <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-ticket text-primary me-2"></i> Do'kondan Olingan Shaxsiy Promokodlaringiz</h4>
+        <div class="row g-3">
+            {% for cp in unlocked_coupons %}
+                <div class="col-md-6">
+                    <div class="p-3 bg-white rounded-4 border shadow-sm d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-danger-subtle text-danger fw-bold mb-1">-{{ cp.discount_percent }}% Chegirma</span>
+                            <div class="fw-bold fs-5 text-dark"><code>{{ cp.code }}</code></div>
+                            <small class="text-muted">Checkout sahifasida qo'llashingiz mumkin</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="navigator.clipboard.writeText('{{ cp.code }}'); alert('Nusxalandi: {{ cp.code }}');">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- EduCoin Tranzaksiyalari Tarixi -->
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-coins text-warning me-2"></i> EduCoin Tranzaksiyalari Tarixi</h4>
+            <a href="{% url 'coin_shop' %}" class="small text-decoration-none fw-semibold">Barcha kvestlar & Do'kon &rarr;</a>
+        </div>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="py-3 px-4">Faoliyat turi</th>
+                            <th class="py-3">Tavsif</th>
+                            <th class="py-3 text-center">Miqdor</th>
+                            <th class="py-3 text-end px-4">Sana</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in transactions %}
+                            <tr>
+                                <td class="py-3 px-4">
+                                    <span class="badge {% if tx.amount > 0 %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} fw-bold px-2.5 py-1">
+                                        {{ tx.get_action_type_display }}
+                                    </span>
+                                </td>
+                                <td class="py-3 fw-semibold text-dark">{{ tx.description }}</td>
+                                <td class="py-3 text-center fw-bold {% if tx.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if tx.amount > 0 %}+{{ tx.amount }}{% else %}{{ tx.amount }}{% endif %} 🪙
+                                </td>
+                                <td class="py-3 text-end px-4 text-muted small">{{ tx.created_at|date:"d.m.Y, H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">Hozircha tranzaksiyalar mavjud emas.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Xaridlar va To'lov Kvitansiyalari -->
+    <div class="mb-5">
+        <h4 class="fw-bold text-dark mb-3">
+            <i class="fa-solid fa-receipt text-success me-2"></i> Mening Xaridlarim va To'lov Kvitansiyalarim
+        </h4>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="py-3 px-4">Kvitansiya ID</th>
+                            <th class="py-3">Xarid qilingan Kurs</th>
+                            <th class="py-3 text-center">To'lov Usuli</th>
+                            <th class="py-3 text-center">To'langan Summa</th>
+                            <th class="py-3 text-end px-4">Xarid Sanasi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enr in enrollments %}
+                            <tr>
+                                <td class="py-3 px-4">
+                                    <code>{{ enr.transaction_id }}</code>
+                                </td>
+                                <td class="py-3 fw-bold text-dark">
+                                    {% with first_les=enr.course.get_first_lesson %}
+                                        {% if first_les %}
+                                            <a href="{% url 'classroom' first_les.id %}" class="text-decoration-none text-dark">
+                                                {{ enr.course.title }}
+                                            </a>
+                                        {% else %}
+                                            {{ enr.course.title }}
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td class="py-3 text-center">
+                                    <span class="badge bg-primary-subtle text-primary text-uppercase px-2.5 py-1">
+                                        {{ enr.get_payment_method_display }}
+                                    </span>
+                                </td>
+                                <td class="py-3 text-center fw-bold text-success">
+                                    {{ enr.amount_paid|floatformat:0 }} so'm
+                                    {% if enr.coupon %}
+                                        <div class="small text-muted fw-normal">Kupon: {{ enr.coupon.code }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 text-end px-4 text-muted small">
+                                    {{ enr.created_at|date:"d.m.Y, H:i" }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Hozircha xarid qilingan pulli kurslar mavjud emas.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testlar Tarixi -->
+    <div>
+        <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> So'nggi Test Natijalari</h4>
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="py-3 px-4">Kurs / Modul</th>
+                            <th class="py-3">Test Nomi</th>
+                            <th class="py-3 text-center">Natija (%)</th>
+                            <th class="py-3 text-center">Holat</th>
+                            <th class="py-3 text-end px-4">Topshirilgan Sana</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for res in quiz_results %}
+                            <tr>
+                                <td class="py-3 px-4">
+                                    <div class="fw-bold text-dark">{{ res.quiz.module.course.title }}</div>
+                                    <small class="text-muted">{{ res.quiz.module.title }}</small>
+                                </td>
+                                <td class="py-3">{{ res.quiz.title }}</td>
+                                <td class="py-3 text-center fw-bold {% if res.is_passed %}text-success{% else %}text-danger{% endif %}">
+                                    {{ res.score }}%
+                                </td>
+                                <td class="py-3 text-center">
+                                    {% if res.is_passed %}
+                                        <span class="badge bg-success">O'tdi</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">O'tmadi</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 text-end px-4 text-muted small">
+                                    {{ res.created_at|date:"d.m.Y, H:i" }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    Hozircha test topshirilmagan.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Profilni Tahrirlash Modali (+30 EduCoin kvesti bilan) -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="editProfileModalLabel">
+                    <i class="fa-solid fa-user-pen text-primary me-2"></i> Profilni Tahrirlash
+                </h5>
+                <button type="button" class="btn-close" data-bs-toggle="modal" aria-label="Yopish"></button>
+            </div>
+            <form method="POST" action="{% url 'update_profile' %}">
+                {% csrf_token %}
+                <div class="modal-body py-3">
+                    <div class="alert alert-info py-2 px-3 small rounded-3 mb-3">
+                        <i class="fa-solid fa-lightbulb me-1"></i> Kasbingiz va o'zingiz haqingizda qisqacha yozib, <strong>+30 🪙 EduCoin</strong> profil to'ldirish kvestini bajaring!
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Ism</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Familiya</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Kasbi yoki unvoni (Headline)</label>
+                        <input type="text" name="headline" class="form-control" placeholder="Masalan: Python Backend Dasturchi" value="{{ user.headline }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">O'zingiz haqingizda (Bio)</label>
+                        <textarea name="bio" rows="3" class="form-control" placeholder="Qiziqishlaringiz, maqsadlaringiz va o'rganayotgan sohangiz">{{ user.bio }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Avatar rasm havolasi (URL)</label>
+                        <input type="url" name="avatar_url" class="form-control" placeholder="https://images.unsplash.com/..." value="{{ user.avatar_url }}">
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary-custom fw-bold px-4">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Saqlash
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

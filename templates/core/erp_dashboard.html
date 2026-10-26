@@ -1,0 +1,380 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}O'quv Markaz Boshqaruv Paneli (ERP & CRM) — SkillUp{% endblock %}
+
+{% block extra_css %}
+<style>
+    .erp-header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #312e81 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+    }
+    .erp-kpi-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04);
+        height: 100%;
+    }
+    .erp-kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px -3px rgba(79, 70, 229, 0.12);
+        border-color: #c7d2fe;
+    }
+    .kpi-icon-pill {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        margin-bottom: 0.75rem;
+    }
+    .alert-danger-custom {
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        border: 1px solid #fca5a5;
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+    }
+    .quick-nav-pill {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        font-weight: 600;
+        color: #334155;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+    }
+    .quick-nav-pill:hover {
+        background: #4f46e5;
+        color: white;
+        border-color: #4f46e5;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- 🌟 ERP HEADER BANNER -->
+    <div class="erp-header">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-2">
+                    <i class="fa-solid fa-gauge-high me-1"></i> Direktor & Menejer Boshqaruv Markazi
+                </span>
+                <h1 class="display-6 fw-extrabold mb-1">Learning Center ERP / CRM Hub</h1>
+                <p class="text-light opacity-75 mb-0 small">
+                    Moliya, guruhlar, dars jadvali, xonalar bandligi, davomat monitoringi va mijozlar oqimi (Lidlar)
+                </p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'finance_dashboard' %}" class="btn btn-success fw-bold px-3 py-2 rounded-pill shadow-sm">
+                    <i class="fa-solid fa-coins me-1"></i> Moliya & Kassa
+                </a>
+                <a href="{% url 'attendance' %}" class="btn btn-light fw-bold px-3 py-2 rounded-pill shadow-sm">
+                    <i class="fa-solid fa-clipboard-user me-1 text-primary"></i> Davomat Qilish
+                </a>
+                <a href="{% url 'timetable' %}" class="btn btn-outline-light fw-semibold px-3 py-2 rounded-pill">
+                    <i class="fa-solid fa-calendar-days me-1"></i> Dars Jadvali
+                </a>
+                <a href="{% url 'leads_management' %}" class="btn btn-warning fw-bold px-3 py-2 rounded-pill">
+                    <i class="fa-solid fa-users-viewfinder me-1"></i> CRM Lidlar ({{ new_leads_count }})
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🚨 OGOHLANTIRISH (Ketma-ket 3 kun kelmagan talabalar) -->
+    {% if consecutive_absence_alerts %}
+    <div class="alert-danger-custom mb-4 shadow-sm">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="fa-solid fa-triangle-exclamation text-danger fa-xl"></i>
+            <h5 class="fw-bold text-danger mb-0">DIQQAT: 3 kun ketma-ket dars qoldirgan talabalar aniqlandi!</h5>
+            <span class="badge bg-danger rounded-pill">{{ consecutive_absence_alerts|length }} nafar</span>
+        </div>
+        <p class="text-danger-emphasis small mb-3">
+            Ushbu o'quvchilar oxirgi 3 ta darsga sababsiz kelmagan. O'qishni tashlab ketish xavfi mavjud! Iltimos, darhol ota-onasiga qo'ng'iroq qilib holatni aniqlang:
+        </p>
+        <div class="row g-2">
+            {% for alt in consecutive_absence_alerts %}
+            <div class="col-md-6 col-lg-4">
+                <div class="bg-white p-2.5 rounded-3 border border-danger border-opacity-25 d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong class="text-dark d-block">{{ alt.student.get_full_name|default:alt.student.username }}</strong>
+                        <small class="text-muted">{{ alt.group.name }} &bull; Sanalar: {{ alt.dates }}</small>
+                    </div>
+                    <a href="tel:{{ alt.student.headline }}" class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-2.5">
+                        <i class="fa-solid fa-phone me-1"></i> Qo'ng'iroq
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 📊 ASOSIY 6 TA ERP KPI BLOKLARI -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Faol Talabalar -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="erp-kpi-card">
+                <div class="kpi-icon-pill bg-primary bg-opacity-10 text-primary">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">Faol Talabalar</div>
+                <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_students }}</h3>
+                <small class="text-success fw-bold"><i class="fa-solid fa-circle-check"></i> {{ total_groups_count }} ta guruhda</small>
+            </div>
+        </div>
+
+        <!-- 2. O'qituvchilar -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="erp-kpi-card">
+                <div class="kpi-icon-pill bg-success bg-opacity-10 text-success">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">O'qituvchilar</div>
+                <h3 class="fw-bold text-dark mt-1 mb-0">{{ total_teachers }}</h3>
+                <small class="text-muted">Katta ustozlar</small>
+            </div>
+        </div>
+
+        <!-- 3. Kutilayotgan Oylik Tushum -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="erp-kpi-card">
+                <div class="kpi-icon-pill bg-info bg-opacity-10 text-info">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">Reja Tushum</div>
+                <h4 class="fw-bold text-dark mt-1 mb-0">{{ expected_revenue|floatformat:0 }}</h4>
+                <small class="text-muted">oylik hisob-kitob</small>
+            </div>
+        </div>
+
+        <!-- 4. Amaldagi Tushum (Tushgan pul) -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="erp-kpi-card border-success border-opacity-50">
+                <div class="kpi-icon-pill bg-success bg-opacity-10 text-success">
+                    <i class="fa-solid fa-sack-dollar"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">Amalda Tushdi</div>
+                <h4 class="fw-bold text-success mt-1 mb-0">{{ actual_revenue|floatformat:0 }}</h4>
+                <small class="text-success fw-bold"><i class="fa-solid fa-check"></i> Kassada</small>
+            </div>
+        </div>
+
+        <!-- 5. Qarzdorlik -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="erp-kpi-card border-danger border-opacity-50">
+                <div class="kpi-icon-pill bg-danger bg-opacity-10 text-danger">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">Qarzdorlik</div>
+                <h4 class="fw-bold text-danger mt-1 mb-0">{{ total_debt|floatformat:0 }}</h4>
+                <small class="text-danger fw-bold"><i class="fa-solid fa-circle-exclamation"></i> Undirilishi shart</small>
+            </div>
+        </div>
+
+        <!-- 6. Sof Foyda (Net Profit) -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="erp-kpi-card border-warning border-opacity-50">
+                <div class="kpi-icon-pill bg-warning bg-opacity-10 text-warning">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div class="text-muted small fw-semibold text-uppercase">Sof Foyda</div>
+                <h4 class="fw-bold text-warning-emphasis mt-1 mb-0">{{ net_profit|floatformat:0 }}</h4>
+                <small class="text-muted">Tushum - (Oylik+Xarajat)</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📈 MOLIYAVIY HISOBOT DIAGRAMMASI VA XARAJATLAR -->
+    <div class="row g-4 mb-4">
+        <!-- Cashflow Diagrammasi -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0">
+                            <i class="fa-solid fa-money-bill-transfer text-primary me-2"></i> Markaz Oylik Moliyaviy Balansi (mln so'm)
+                        </h5>
+                        <small class="text-muted">Tushumlar, o'qituvchilar maoshi, xarajatlar va olingan sof foyda taqqoslamasi</small>
+                    </div>
+                    <span class="badge bg-light text-dark border">{{ current_month }} oyi</span>
+                </div>
+                <div style="min-height: 270px;">
+                    <canvas id="cashflowChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- CRM Yangi Lidlar Oqimi -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fa-solid fa-user-plus text-warning me-2"></i> Yangi Sinov Darsi Arizalari (Lidlar)
+                    </h5>
+                    <a href="{% url 'leads_management' %}" class="small text-primary text-decoration-none fw-semibold">Barchasi &rarr;</a>
+                </div>
+
+                <div class="list-group list-group-flush">
+                    {% for ld in recent_leads %}
+                    <div class="list-group-item px-0 py-2 border-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-bold text-dark small">{{ ld.full_name }}</div>
+                                <div class="text-muted" style="font-size: 0.76rem;">
+                                    <i class="fa-solid fa-phone text-success me-1"></i> {{ ld.phone_number }}
+                                    &bull; <span class="text-primary">{{ ld.interested_subject }}</span>
+                                </div>
+                            </div>
+                            <span class="badge {% if ld.status == 'new' %}bg-warning text-dark{% elif ld.status == 'trial' %}bg-info text-white{% elif ld.status == 'enrolled' %}bg-success{% else %}bg-secondary{% endif %} rounded-pill" style="font-size: 0.72rem;">
+                                {{ ld.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">Hozircha yangi arizalar yo'q.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-auto pt-3 border-top">
+                    <a href="{% url 'leads_management' %}" class="btn btn-outline-primary btn-sm w-100 rounded-pill fw-semibold">
+                        <i class="fa-solid fa-list-check me-1"></i> Barcha Lidlar va Muloqotlar Boshqaruvi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👥 FAOL O'QUV GURUHLARI VA XONALAR BANDLIGI -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-layer-group text-success me-2"></i> Faol Guruhlar va Dars Jadvallari
+                </h5>
+                <small class="text-muted">Markazda o'tilayotgan barcha fanlar, xonalar va mas'ul o'qituvchilar</small>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'timetable' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                    <i class="fa-solid fa-calendar-week me-1"></i> Xonalar Grid Jadvali
+                </a>
+                <a href="{% url 'attendance' %}" class="btn btn-sm btn-primary rounded-pill px-3">
+                    <i class="fa-solid fa-check-double me-1"></i> Davomatga O'tish
+                </a>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Guruh Nomi</th>
+                        <th>Mas'ul O'qituvchi</th>
+                        <th>Xona & Sig'im</th>
+                        <th>Dars Vaqti & Kunlari</th>
+                        <th>Talabalar Soni</th>
+                        <th>Oylik Narxi</th>
+                        <th class="text-end">Davomat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for grp in active_groups %}
+                    <tr>
+                        <td>
+                            <strong class="text-dark">{{ grp.name }}</strong>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-light text-primary border">{{ grp.teacher.get_full_name|default:grp.teacher.username }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-indigo-subtle text-indigo border" style="background: #eef2ff; color: #4338ca;">
+                                <i class="fa-solid fa-door-open me-1"></i> {{ grp.room.name|default:"101-xona" }}
+                            </span>
+                        </td>
+                        <td>
+                            <small class="text-dark fw-semibold d-block">{{ grp.start_time }} - {{ grp.end_time }}</small>
+                            <small class="text-muted">{{ grp.get_days_schedule_display }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info bg-opacity-10 text-info fw-bold">
+                                <i class="fa-solid fa-users me-1"></i> {{ grp.students.count }} nafar
+                            </span>
+                        </td>
+                        <td>
+                            <strong class="text-success">{{ grp.monthly_fee|floatformat:0 }} so'm</strong>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'attendance_group' grp.id %}" class="btn btn-outline-success btn-sm rounded-pill px-3 py-1 fw-semibold">
+                                Davomat &rarr;
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">Hozircha guruhlar mavjud emas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const ctx = document.getElementById('cashflowChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ cashflow_labels_json|safe }},
+            datasets: [{
+                label: "Mablag' (mln so'm)",
+                data: {{ cashflow_values_json|safe }},
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.85)', // Tushum (Yashil)
+                    'rgba(245, 158, 11, 0.85)', // Maosh (Sariq)
+                    'rgba(239, 68, 68, 0.85)',  // Xarajat (Qizil)
+                    'rgba(79, 70, 229, 0.85)'   // Sof Foyda (Ko'k)
+                ],
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: "Million so'm" }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
