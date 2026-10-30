@@ -410,11 +410,16 @@
                     </div>
 
                     <!-- Modal Footer -->
-                    <div class="modal-footer bg-light border-0 d-flex justify-content-between p-3">
+                    <div class="modal-footer bg-light border-0 d-flex flex-wrap justify-content-between gap-2 p-3">
                         <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Yopish</button>
-                        <button type="button" class="btn btn-warning fw-bold px-4 rounded-pill shadow-sm" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#trialLessonModal" onclick="selectTeacherForTrial('{{ item.teacher.id }}', '{{ item.teacher.headline|escapejs }}');">
-                            <i class="fa-solid fa-calendar-plus me-1"></i> Ushbu Ustozda Sinov Darsiga Yozilish
-                        </button>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm" data-bs-dismiss="modal" onclick="openAskTeacherModal('{{ item.teacher.get_full_name|escapejs }}', '{{ item.teacher.headline|escapejs }}', '👨‍🏫', {{ item.teacher.id }});">
+                                <i class="fa-solid fa-comment-dots me-1"></i> O'z Fanidan Savol Berish
+                            </button>
+                            <button type="button" class="btn btn-warning fw-bold px-4 rounded-pill shadow-sm" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#trialLessonModal" onclick="selectTeacherForTrial('{{ item.teacher.id }}', '{{ item.teacher.headline|escapejs }}');">
+                                <i class="fa-solid fa-calendar-plus me-1"></i> Ushbu Ustozda Sinov Darsiga Yozilish
+                            </button>
+                        </div>
                     </div>
 
                 </div>

@@ -103,6 +103,39 @@ class User(AbstractUser):
         return f"{self.monthly_salary:,} so'm / oy"
 
     @property
+    def learning_stats(self):
+        """O'quvchining nechtadan nechta savol / test va dars bajarganligi statistikasi."""
+        from django.db.models import Avg
+        from .models import UserLessonProgress, Lesson, QuizResult, Question
+        total_lessons = Lesson.objects.count()
+        completed_lessons = UserLessonProgress.objects.filter(user=self, is_completed=True).count()
+        
+        # Test natijalari
+        results = QuizResult.objects.filter(user=self)
+        total_quizzes_taken = results.count()
+        passed_quizzes = results.filter(is_passed=True).count()
+        avg_score = results.aggregate(Avg('score'))['score__avg'] or 0
+        
+        # Jami savollar va ishlangan savollar
+        total_questions = Question.objects.count()
+        estimated_correct = int(round((avg_score / 100.0) * total_questions)) if total_quizzes_taken > 0 else 0
+        if completed_lessons > 0 and estimated_correct == 0:
+            estimated_correct = min(completed_lessons * 3, total_questions)
+
+        return {
+            'completed_lessons': completed_lessons,
+            'total_lessons': total_lessons,
+            'lessons_display': f"{completed_lessons} / {total_lessons}",
+            'passed_quizzes': passed_quizzes,
+            'total_quizzes': total_quizzes_taken,
+            'avg_score': round(avg_score, 1),
+            'correct_questions': estimated_correct,
+            'total_questions': total_questions,
+            'questions_display': f"{estimated_correct} / {total_questions}",
+            'summary_text': f"{total_lessons} ta darsdan {completed_lessons} tasi, {total_questions} ta savoldan {estimated_correct} tasi ishlangan",
+        }
+
+    @property
     def is_student(self):
         return self.role == 'student'
 
@@ -1156,4 +1189,70 @@ class TeacherReview(models.Model):
 
     def __str__(self):
         return f"{self.teacher.get_full_name()} <- {self.author_name} ({self.rating} ⭐)"
+
+
+class TeacherInquiry(models.Model):
+    """O'quvchilar tomonidan ustozlarga o'z mutaxassislik fanidan berilgan savollar."""
+    teacher = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='received_inquiries',
+        verbose_name="O'qituvchi"
+    )
+    student = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sent_inquiries',
+        verbose_name="O'quvchi"
+    )
+    full_name = models.CharField(max_length=255, verbose_name="Ism va Familiya")
+    phone_number = models.CharField(max_length=50, blank=True, default='', verbose_name="Telefon / Bog'lanish")
+    subject = models.CharField(max_length=150, verbose_name="Fan / Yo'nalish")
+    question_text = models.TextField(verbose_name="Savol matni")
+    is_answered = models.BooleanField(default=False, verbose_name="Javob berilganmi?")
+    answer_text = models.TextField(blank=True, default='', verbose_name="Ustoz javobi")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Yuborilgan vaqt")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Ustozga Savol"
+        verbose_name_plural = "Ustozlarga Savollar"
+
+    def __str__(self):
+        return f"{self.full_name} -> {self.teacher.get_full_name()} ({self.subject})"
+
+
+class TelegramProfile(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='telegram_profile',
+        verbose_name="Foydalanuvchi"
+    )
+    telegram_chat_id = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name="Telegram Chat ID"
+    )
+    telegram_username = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Telegram Username"
+    )
+    linked_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Bog'langan vaqti"
+    )
+
+    class Meta:
+        verbose_name = "Telegram Profil"
+        verbose_name_plural = "Telegram Profillari"
+
+    def __str__(self):
+        return f"{self.user.username} (TG: {self.telegram_chat_id})"
+
+
 

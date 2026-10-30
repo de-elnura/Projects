@@ -5,8 +5,9 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django.db import IntegrityError
 from django.db.models import Sum, Count, Q, Avg, Min, Max
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .models import (
@@ -17,9 +18,10 @@ from .models import (
     CoinTransaction, CoinShopItem,
     Room, StudyGroup, Group, Attendance,
     StudentPayment, TeacherSalary, Expense,
-    Lead, TeacherReview
+    Lead, TeacherReview, TeacherInquiry
 )
 from .forms import StudentRegistrationForm, UserLoginForm
+from .telegram_service import notify_admin_new_user, notify_admin_new_lead
 
 
 # =============================================================================
@@ -68,6 +70,30 @@ def award_edu_coins(user, action_type, custom_desc=None):
     return amount
 
 
+def get_user_daily_streak(user):
+    """Foydalanuvchining ketma-ket tashrif (Streak) kunlari sonini aniqlash."""
+    if not user or not user.is_authenticated:
+        return 0
+    today = timezone.localdate()
+    yesterday = today - timezone.timedelta(days=1)
+
+    claimed_dates = set(
+        CoinTransaction.objects.filter(
+            user=user,
+            action_type='daily_streak',
+            created_at__date__gte=today - timezone.timedelta(days=35)
+        ).values_list('created_at__date', flat=True)
+    )
+
+    count = 0
+    check_date = today if today in claimed_dates else yesterday
+    while check_date in claimed_dates:
+        count += 1
+        check_date -= timezone.timedelta(days=1)
+    return count
+
+
+
 def home(request):
     """Bosh sahifa: Kurslar katalogiga yo'naltiradi."""
     return redirect('course_list')
@@ -92,6 +118,16 @@ def course_list(request):
         courses = courses.filter(category__iexact=selected_category)
     if selected_schedule and selected_schedule != 'Barchasi':
         courses = courses.filter(schedule_type__iexact=selected_schedule)
+
+    # Qidiruv bo'yicha mos kelgan o'qituvchilar (agar ustoz ismi kiritilgan bo'lsa)
+    matched_teachers = []
+    if query:
+        matched_teachers = User.objects.filter(role='teacher', is_superuser=False).filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(headline__icontains=query) |
+            Q(specialties__icontains=query)
+        )[:4]
 
     # Mavjud kategoriyalar
     categories = [
@@ -152,6 +188,7 @@ def course_list(request):
     return render(request, 'core/course_list.html', {
         'courses_data': courses_data,
         'query': query,
+        'matched_teachers': matched_teachers,
         'selected_category': selected_category,
         'selected_schedule': selected_schedule,
         'categories': categories,
@@ -221,6 +258,44 @@ def teachers_list(request):
         'selected_cat': selected_cat,
         'search_q': search_q,
     })
+
+
+def api_search_teachers(request):
+    """
+    O'qituvchilarni tezkor qidirish (Navbar live search).
+    Ism, familiya, mutaxassislik yoki fan bo'yicha qidiradi.
+    """
+    q = request.GET.get('q', '').strip()
+    results = []
+    if q:
+        teachers = User.objects.filter(role='teacher', is_superuser=False).filter(
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(headline__icontains=q) |
+            Q(specialties__icontains=q) |
+            Q(bio__icontains=q)
+        )[:6]
+        if not teachers.exists():
+            teachers = User.objects.filter(role='teacher').filter(
+                Q(first_name__icontains=q) |
+                Q(last_name__icontains=q) |
+                Q(headline__icontains=q)
+            )[:6]
+
+        for t in teachers:
+            full_name = t.get_full_name() or t.username
+            headline = t.headline or t.get_specialties_display() or "Professional O'qituvchi"
+            avatar_url = t.avatar.url if (hasattr(t, 'avatar') and t.avatar) else None
+            results.append({
+                'id': t.id,
+                'name': full_name,
+                'headline': headline,
+                'avatar': avatar_url,
+                'specialties': t.specialties,
+                'url': f"/teachers/?q={t.first_name or t.username}",
+            })
+
+    return JsonResponse({'results': results})
 
 
 @login_required
@@ -589,6 +664,27 @@ def take_quiz(request, quiz_id):
         )
         return redirect('course_list')
 
+    # Ushbu modul darslari yakunlanganligini tekshirish (o'qituvchi va adminlar istisno)
+    if not (request.user.is_staff or request.user.role == 'teacher'):
+        module_lessons_count = module.lessons.count()
+        if module_lessons_count > 0:
+            completed_in_module = UserLessonProgress.objects.filter(
+                user=request.user,
+                lesson__module=module,
+                is_completed=True
+            ).count()
+            if completed_in_module < module_lessons_count:
+                messages.warning(
+                    request,
+                    f"🔒 Modul testiga kirish uchun avval ushbu modulning barcha darslarini yakunlang! ({completed_in_module}/{module_lessons_count} dars tugatilgan)"
+                )
+                first_uncompleted = module.lessons.exclude(
+                    id__in=UserLessonProgress.objects.filter(user=request.user, is_completed=True).values_list('lesson_id', flat=True)
+                ).order_by('order').first()
+                if first_uncompleted:
+                    return redirect('classroom', lesson_id=first_uncompleted.id)
+                return redirect('course_list')
+
     questions = quiz.questions.all().prefetch_related('choices')
     if not questions.exists():
         messages.warning(request, "Ushbu testda hozircha savollar mavjud emas.")
@@ -623,6 +719,17 @@ def take_quiz(request, quiz_id):
         score_percent = round((correct_count / total_questions) * 100, 1) if total_questions > 0 else 0
         is_passed = score_percent >= quiz.passing_score
 
+        # Avvalgi muvaffaqiyatli topshirish va eng yaxshi natijani tekshirish (Anti-Farming)
+        prev_passed = QuizResult.objects.filter(
+            user=request.user,
+            quiz=quiz,
+            is_passed=True
+        ).exists()
+        prev_best = QuizResult.objects.filter(
+            user=request.user,
+            quiz=quiz
+        ).aggregate(models.Max('score'))['score__max'] or 0
+
         # Natijani saqlash
         result = QuizResult.objects.create(
             user=request.user,
@@ -636,32 +743,56 @@ def take_quiz(request, quiz_id):
         course_coins = 0
 
         if is_passed:
-            # Har bir to'g'ri javob uchun 10 XP + O'tganlik uchun 50 XP bonus
-            xp_earned = (correct_count * 10) + 50
-            request.user.total_xp += xp_earned
-            request.user.save()
+            if not prev_passed:
+                # Birinchi marta muvaffaqiyatli topshirildi: to'liq XP va Coin mukofotlanadi
+                xp_earned = (correct_count * 10) + 50
+                request.user.total_xp += xp_earned
+                request.user.save()
 
-            # 🪙 8 xil EduCoin rag'bati: 100% natija uchun +50, 70%+ uchun +25
-            if score_percent >= 100:
+                if score_percent >= 100:
+                    coins_earned = award_edu_coins(
+                        request.user,
+                        'quiz_perfect',
+                        f"'{quiz.title}' testidan 100% a'lo natija (+50 🪙)"
+                    )
+                    messages.success(
+                        request,
+                        f"🌟 A'LO DARAJA! Testdan 100% natija bilan o'tdingiz (+{xp_earned} XP va +{coins_earned} 🪙 EduCoin)!"
+                    )
+                else:
+                    coins_earned = award_edu_coins(
+                        request.user,
+                        'quiz_passed',
+                        f"'{quiz.title}' testidan muvaffaqiyatli o'tildi (+25 🪙)"
+                    )
+                    messages.success(
+                        request,
+                        f"🏆 Ajoyib natija! Testdan {score_percent}% bilan muvaffaqiyatli o'tdingiz (+{xp_earned} XP va +{coins_earned} 🪙 EduCoin)!"
+                    )
+            elif score_percent == 100 and prev_best < 100:
+                # Avval pastroq ball bilan o'tgan, endi 100% rekord o'rnatdi: qo'shimcha a'lo daraja bonusi
+                xp_earned = 25
+                request.user.total_xp += xp_earned
+                request.user.save()
                 coins_earned = award_edu_coins(
                     request.user,
                     'quiz_perfect',
-                    f"'{quiz.title}' testidan 100% a'lo natija (+50 🪙)"
+                    f"'{quiz.title}' testida natijangizni 100% ga yetkazganingiz uchun bonus (+25 🪙)"
                 )
                 messages.success(
                     request,
-                    f"🌟 A'LO DARAJA! Testdan 100% natija bilan o'tdingiz (+{xp_earned} XP va +{coins_earned} 🪙 EduCoin)!"
+                    f"🌟 REKORD YANGILANDI! Test natijasini 100% ga yetkazdingiz (+{xp_earned} XP va +{coins_earned} 🪙 EduCoin)!"
                 )
             else:
-                coins_earned = award_edu_coins(
-                    request.user,
-                    'quiz_passed',
-                    f"'{quiz.title}' testidan muvaffaqiyatli o'tildi (+25 🪙)"
-                )
-                messages.success(
+                # Qayta topshirish (amaliyot mashg'uloti): faqat 5 XP, qo'shimcha tanga berilmaydi
+                xp_earned = 5
+                request.user.total_xp += xp_earned
+                request.user.save()
+                messages.info(
                     request,
-                    f"🏆 Ajoyib natija! Testdan {score_percent}% bilan muvaffaqiyatli o'tdingiz (+{xp_earned} XP va +{coins_earned} 🪙 EduCoin)!"
+                    f"💡 Amaliyot mashg'uloti: Test {score_percent}% bilan qayta ishlandi (+{xp_earned} XP). Asosiy EduCoin tangalari avvalgi topshirishda berilgan."
                 )
+
 
             # Kurs yakunlanganligini va barcha modullar topshirilganini tekshirish
             if course.is_completed_by(request.user):
@@ -793,15 +924,19 @@ def profile(request):
     # EduCoin tranzaksiyalari tarixi
     transactions = CoinTransaction.objects.filter(user=user).order_by('-created_at')[:15]
 
-    # Kunlik streak tekshiruvi (24 soat)
+    # Kunlik streak tekshiruvi (kalendar kuni bo'yicha)
+    today = timezone.localdate()
     can_claim_streak = not CoinTransaction.objects.filter(
         user=user,
         action_type='daily_streak',
-        created_at__gte=timezone.now() - timezone.timedelta(hours=24)
+        created_at__date=today
     ).exists()
+    streak_days = get_user_daily_streak(user)
 
     # Talaba o'rni
     user_rank = User.objects.filter(role='student', total_xp__gt=user.total_xp).count() + 1
+    my_inquiries = TeacherInquiry.objects.filter(student=user).select_related('teacher').order_by('-created_at')[:10]
+
 
     # 8 xil EduCoin yutuqlar holati
     quests = [
@@ -883,6 +1018,8 @@ def profile(request):
         'user_rank': user_rank,
         'transactions': transactions,
         'can_claim_streak': can_claim_streak,
+        'streak_days': streak_days,
+        'my_inquiries': my_inquiries,
         'quests': quests,
         'completed_quests_count': completed_quests_count,
         'unlocked_coupons': unlocked_coupons,
@@ -893,11 +1030,16 @@ def profile(request):
 def certificate_detail(request, code):
     """
     Chop etishga (Print/PDF) moslashtirilgan chiroyli rasmiy sertifikat shabloni.
+    Faqat sertifikat egasining o'zi ko'ra oladi (hatto administratorga ham cheklangan).
     """
     certificate = get_object_or_404(
         Certificate.objects.select_related('user', 'course', 'course__author'),
         certificate_code=code
     )
+    if request.user != certificate.user:
+        messages.error(request, "Xavfsizlik: Begona foydalanuvchining sertifikatini ko'rish mutlaqo taqiqlangan!")
+        return redirect('profile')
+
     return render(request, 'core/certificate.html', {
         'certificate': certificate,
         'student': certificate.user,
@@ -909,14 +1051,14 @@ def certificate_detail(request, code):
 def parent_report(request, user_id=None):
     """
     Ota-onalar uchun rasmiy o'zlashtirish ma'lumotnomasi (A4 / PDF print formatida):
-    - O'quvchining fanlar bo'yicha davomati
-    - Topshirilgan testlar va o'rtacha balli
-    - To'plangan umumiy XP va respublika reytingi
-    - O'qituvchilar va platforma ma'muriyati xulosasi
+    - Har bir foydalanuvchi faqat o'zining hisobotini ko'ra oladi
+    - Begona foydalanuvchilar hisobotini ko'rish mutlaqo taqiqlangan (hatto administrator uchun ham)
     """
+    if user_id and user_id != request.user.id:
+        messages.error(request, "Xavfsizlik: Begona foydalanuvchilarning hisobotini ko'rish mutlaqo taqiqlangan!")
+        return redirect('parent_report')
+
     target_user = request.user
-    if user_id and (request.user.is_staff or request.user.is_teacher):
-        target_user = get_object_or_404(User, id=user_id)
 
     completed_lessons = UserLessonProgress.objects.filter(user=target_user, is_completed=True)
     quiz_results = QuizResult.objects.filter(user=target_user).select_related('quiz', 'quiz__module__course')
@@ -951,10 +1093,18 @@ def register_view(request):
     if request.method == 'POST':
         form = StudentRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            try:
+                user = form.save()
+            except IntegrityError:
+                form.add_error('username', "Bu foydalanuvchi nomi yoki email allaqachon mavjud. Iltimos, boshqa nom tanlang.")
+                return render(request, 'core/register.html', {'form': form})
+
             # 🪙 8 xil EduCoin rag'bati: Ro'yxatdan o'tganlik uchun boshlang'ich bonus (+100 🪙)
             award_edu_coins(user, 'welcome_bonus', "Ro'yxatdan o'tganingiz uchun xush kelibsiz bonusi (+100 🪙)")
             login(request, user)
+
+            # 🤖 Telegram Bot orqali adminga yangi talaba ro'yxatdan o'tganligi haqida bildirishnoma
+            notify_admin_new_user(user)
             messages.success(
                 request,
                 f"🎉 Xush kelibsiz, {user.first_name or user.username}! Muvaffaqiyatli ro'yxatdan o'tdingiz va hamyoningizga +100 🪙 EduCoin taqdim etildi!"
@@ -1008,27 +1158,64 @@ def update_profile(request):
 
 @login_required
 def claim_daily_bonus(request):
-    """Har 24 soatda bir marta kunlik +15 EduCoin faollik bonusini olish."""
-    recent_streak = CoinTransaction.objects.filter(
+    """Kalendar kuni bo'yicha ketma-ket tashrif (Streak) bonusini olish."""
+    today = timezone.localdate()
+    yesterday = today - timezone.timedelta(days=1)
+
+    claimed_today = CoinTransaction.objects.filter(
         user=request.user,
         action_type='daily_streak',
-        created_at__gte=timezone.now() - timezone.timedelta(hours=24)
-    ).first()
+        created_at__date=today
+    ).exists()
 
-    if not recent_streak:
-        amount = award_edu_coins(
-            request.user,
-            'daily_streak',
-            "Kunlik platformaga tashrif va faollik bonusi (+15 🪙)"
+    if not claimed_today:
+        claimed_yesterday = CoinTransaction.objects.filter(
+            user=request.user,
+            action_type='daily_streak',
+            created_at__date=yesterday
+        ).exists()
+
+        current_streak = get_user_daily_streak(request.user)
+        new_streak = (current_streak + 1) if claimed_yesterday else 1
+
+        if new_streak >= 7:
+            bonus_amount = 50
+        elif new_streak >= 3:
+            bonus_amount = 25
+        elif new_streak == 2:
+            bonus_amount = 20
+        else:
+            bonus_amount = 15
+
+        request.user.edu_coins += bonus_amount
+        request.user.save(update_fields=['edu_coins'])
+
+        CoinTransaction.objects.create(
+            user=request.user,
+            amount=bonus_amount,
+            action_type='daily_streak',
+            description=f"Kunlik {new_streak}-kunlik ketma-ket tashrif (Streak) bonusi (+{bonus_amount} 🪙)"
         )
-        messages.success(
-            request,
-            f"🔥 Tabriklaymiz! Kunlik faollik bonusi (+{amount} 🪙 EduCoin) hamyoningizga muvaffaqiyatli o'tkazildi!"
-        )
+
+        if new_streak >= 7:
+            messages.success(
+                request,
+                f"⚡ SIZ QAHRAMONSIZ! {new_streak} kunlik uzluksiz tashrif (Streak)! Maxsus Mega-Bonus: +{bonus_amount} 🪙 EduCoin!"
+            )
+        elif new_streak > 1:
+            messages.success(
+                request,
+                f"🔥 AJOYIB! {new_streak}-kunlik ketma-ket faollik (Streak)! Hamyoningizga +{bonus_amount} 🪙 EduCoin o'tkazildi!"
+            )
+        else:
+            messages.success(
+                request,
+                f"🎉 Tabriklaymiz! Kunlik faollik bonusi (+{bonus_amount} 🪙 EduCoin) hamyoningizga muvaffaqiyatli o'tkazildi!"
+            )
     else:
         messages.info(
             request,
-            "Bugungi kunlik bonusingizni allaqachon qabul qilgansiz. 24 soatdan so'ng yana tashrif buyurib yangi bonus oling!"
+            "Bugungi kunlik bonusingizni allaqachon qabul qilgansiz. Ertaga yana tashrif buyurib yangi bonus oling!"
         )
 
     referer = request.META.get('HTTP_REFERER')
@@ -1049,11 +1236,30 @@ def coin_shop(request):
     items = CoinShopItem.objects.filter(is_available=True)
     user_transactions = CoinTransaction.objects.filter(user=request.user).order_by('-created_at')[:20]
 
+    today = timezone.localdate()
+    yesterday = today - timezone.timedelta(days=1)
     can_claim_streak = not CoinTransaction.objects.filter(
         user=request.user,
         action_type='daily_streak',
-        created_at__gte=timezone.now() - timezone.timedelta(hours=24)
+        created_at__date=today
     ).exists()
+    streak_days = get_user_daily_streak(request.user)
+
+    claimed_yesterday = CoinTransaction.objects.filter(
+        user=request.user,
+        action_type='daily_streak',
+        created_at__date=yesterday
+    ).exists()
+    next_streak = (streak_days + 1) if (can_claim_streak and claimed_yesterday) else (streak_days if not can_claim_streak else 1)
+    if next_streak >= 7:
+        next_streak_reward = 50
+    elif next_streak >= 3:
+        next_streak_reward = 25
+    elif next_streak == 2:
+        next_streak_reward = 20
+    else:
+        next_streak_reward = 15
+
 
     # 8 xil O'quvchi Faoliyati bo'yicha EduCoin yutuqlar kvestlari
     quests = [
@@ -1156,6 +1362,8 @@ def coin_shop(request):
         'quests': quests,
         'completed_quests_count': completed_quests_count,
         'can_claim_streak': can_claim_streak,
+        'streak_days': streak_days,
+        'next_streak_reward': next_streak_reward,
         'unlocked_coupons': unlocked_coupons,
     })
 
@@ -1167,6 +1375,14 @@ def buy_shop_item(request, item_id):
         return redirect('coin_shop')
 
     item = get_object_or_404(CoinShopItem, id=item_id)
+
+    # VIP nishon takroriy xaridini tekshirish
+    if item.item_type == 'vip_badge' and request.user.has_vip_badge:
+        messages.info(
+            request,
+            f"👑 Sizda allaqachon Oltin VIP nishon faol! Tanga hisobingizdan yechilmadi."
+        )
+        return redirect('coin_shop')
 
     if request.user.edu_coins < item.price_coins:
         messages.error(
@@ -1223,7 +1439,12 @@ def buy_shop_item(request, item_id):
         description=f"Do'kondan xarid: {item.title}"
     )
 
+    # 🤖 Telegram orqali adminga xarid bildirishnomasi
+    from .telegram_service import notify_admin_shop_purchase
+    notify_admin_shop_purchase(request.user, item)
+
     return redirect('coin_shop')
+
 
 
 def login_view(request):
@@ -1260,7 +1481,12 @@ def statistics_view(request):
     """
     O'qituvchilar va o'quvchilarning mukammal statistikasi va tahlili (Ultra Pro Max).
     Grafiklar (Chart.js), reytinglar, oylik maoshlar, yo'nalishlar va kunlar tartibi tahlili.
+    Faqat tizim Administratori uchun ochiq.
     """
+    # Xavfsizlik: Statistika faqat adminga ko'rinsin
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        messages.warning(request, "Statistika sahifasi faqat tizim Administratori (Admin) uchun ochiq!")
+        return redirect('course_list')
     # 1. Asosiy platforma KPI ko'rsatkichlari
     total_students = User.objects.filter(role='student').count()
     total_teachers = User.objects.filter(role='teacher').count()
@@ -1499,12 +1725,12 @@ def statistics_view(request):
 def erp_dashboard(request):
     """
     Markaz direktori va ma'muriyati uchun markaziy ERP & CRM Boshqaruv Paneli:
-    - Faol talabalar, ustozlar, guruhlar soni
-    - Kutilayotgan tushum, amaldagi tushum, qarzdorliklar
-    - Sof foyda (Net Profit): Tushum - (Oyliklar + Xarajatlar)
-    - 3 kun ketma-ket dars qoldirgan talabalar uchun 'Xavf signali' (Alert)
-    - CRM yangi lidlar va xonalar bandligi
+    Faqat tizim Administratori uchun ochiq.
     """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        messages.error(request, "ERP Boshqaruv paneli faqat tizim Administratori uchun ochiq!")
+        return redirect('course_list')
+
     current_month = timezone.now().strftime("%Y-%m")
     total_students = User.objects.filter(role='student').count()
     total_teachers = User.objects.filter(role='teacher').count()
@@ -1587,12 +1813,12 @@ def erp_dashboard(request):
 def finance_dashboard(request):
     """
     O'quv markaz Moliya va Hisob-kitob bo'limi (Finance & Accounting):
-    - Talabalar to'lovlari (Click, Payme, Uzum, Naqd)
-    - Qarzdorlik tahlili (To'lagan - Yashil, Qisman - Sariq, Qarzdor - Qizil)
-    - O'qituvchilar maoshi kalkulyatori (45% foiz yoki stavka)
-    - Xarajatlar daftari (Ijara, kommunal, marketing, ofis)
-    - Oylik Sof Foyda hisoboti
+    Faqat Administrator uchun ochiq. O'qituvchi va o'quvchilarga yopiq.
     """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        messages.error(request, "Moliya va Kassa bo'limi faqat tizim Administratori uchun ochiq!")
+        return redirect('course_list')
+
     selected_month = request.GET.get('month', timezone.now().strftime("%Y-%m"))
     
     # To'lovlar ro'yxati
@@ -1681,6 +1907,10 @@ def finance_dashboard(request):
 
 def add_student_payment(request):
     """Yangi talaba oylik to'lovini qabul qilish va kvitansiya rasmiylashtirish."""
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        messages.error(request, "Ruxsat etilmagan amal!")
+        return redirect('course_list')
+
     if request.method == 'POST':
         student_id = request.POST.get('student_id')
         group_id = request.POST.get('group_id')
@@ -1721,6 +1951,10 @@ def add_student_payment(request):
 
 def add_expense(request):
     """Xarajatlar daftariga yangi xarajat kiritish."""
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        messages.error(request, "Ruxsat etilmagan amal!")
+        return redirect('course_list')
+
     if request.method == 'POST':
         title = request.POST.get('title')
         category = request.POST.get('category', 'office')
@@ -1742,7 +1976,11 @@ def add_expense(request):
 
 
 def teacher_salary_calculator(request):
-    """O'qituvchi maoshini avtomatik hisoblash va to'lovni tasdiqlash."""
+    """O'qituvchi maoshini avtomatik hisoblash va to'lovni tasdiqlash (Faqat Admin)."""
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        messages.error(request, "Ruxsat etilmagan amal!")
+        return redirect('course_list')
+
     if request.method == 'POST':
         teacher_id = request.POST.get('teacher_id')
         month = request.POST.get('month', timezone.now().strftime("%Y-%m"))
@@ -1863,12 +2101,17 @@ def timetable_view(request):
     return render(request, 'core/timetable.html', context)
 
 
+@login_required
 def attendance_view(request, group_id=None):
     """
     Davomat tizimi (Attendance tracking):
     - O'qituvchi yoki administrator uchun 1 ta tugma bilan butun guruhga oson davomat qilish
     - 3 kun ketma-ket dars qoldirgan talabalar uchun Alert ogohlantirish
     """
+    if not (request.user.is_staff or request.user.is_superuser or request.user.role == 'teacher'):
+        messages.error(request, "Davomat tizimi faqat dars o'tuvchi o'qituvchilar va ma'muriyat uchun ochiq!")
+        return redirect('course_list')
+
     active_groups = StudyGroup.objects.filter(is_active=True).select_related('teacher', 'room')
     
     if group_id:
@@ -1887,6 +2130,8 @@ def attendance_view(request, group_id=None):
         # Davomatni saqlash
         students = selected_group.students.all()
         saved_count = 0
+        from .telegram_service import notify_admin_attendance_danger
+
         for st in students:
             status_val = request.POST.get(f'status_{st.id}', 'present')
             notes_val = request.POST.get(f'notes_{st.id}', '')
@@ -1903,14 +2148,26 @@ def attendance_view(request, group_id=None):
             )
             saved_count += 1
 
+            # Ketma-ket 3 kun dars qoldirilganda Telegram orqali ogohlantirish
+            if status_val == 'absent':
+                absences_3 = Attendance.objects.filter(
+                    group=selected_group,
+                    student=st,
+                    status='absent'
+                ).order_by('-date')[:3].count()
+                if absences_3 >= 3:
+                    notify_admin_attendance_danger(st, selected_group, absence_count=3)
+
         messages.success(
             request,
             f"✅ '{selected_group.name}' guruhi uchun {selected_date} sanasidagi davomat muvaffaqiyatli saqlandi ({saved_count} talaba)!"
         )
         return redirect(f"/attendance/{selected_group.id}/?date={selected_date}")
 
-    # Talabalarning mavjud davomat qaydlarini olish
+    # Talabalarning mavjud davomat va oylik to'lov qaydlarini olish
     students_list = []
+    current_month_str = selected_date.strftime("%Y-%m")
+
     if selected_group:
         for st in selected_group.students.all():
             att_rec = Attendance.objects.filter(
@@ -1926,12 +2183,32 @@ def attendance_view(request, group_id=None):
                 status='absent'
             ).order_by('-date')[:3].count()
 
+            # Oylik to'lov holatini aniqlash
+            st_payments = StudentPayment.objects.filter(
+                student=st,
+                group=selected_group,
+                payment_month=current_month_str
+            )
+            total_paid = sum(p.amount for p in st_payments)
+            fee = selected_group.monthly_fee or 0
+
+            if total_paid >= fee and fee > 0:
+                payment_status = 'paid'
+            elif total_paid > 0:
+                payment_status = 'partial'
+            else:
+                payment_status = 'unpaid'
+
             students_list.append({
                 'student': st,
                 'status': att_rec.status if att_rec else 'present',
                 'notes': att_rec.notes if att_rec else '',
                 'has_danger_alert': recent_absences >= 3,
+                'payment_status': payment_status,
+                'paid_amount': total_paid,
+                'monthly_fee': fee,
             })
+
 
     # Butun markaz bo'yicha ketma-ket 3 kun kelmaganlar ogohlantirishi
     consecutive_absence_alerts = Attendance.get_consecutive_absences_students(3)
@@ -1950,9 +2227,12 @@ def attendance_view(request, group_id=None):
 def leads_management(request):
     """
     CRM Lidlar boshqaruvi (Mijozlar oqimi va Sinov darsiga yozilish):
-    - Yangi lidlarni ko'rish
-    - Holatini 1-bosishda o'zgartirish: Yangi -> Qo'ng'iroq qilindi -> Sinov darsiga yozildi -> Guruhga qo'shildi
+    Faqat Administrator uchun ochiq.
     """
+    if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+        messages.error(request, "CRM Lidlar bo'limi faqat Administrator uchun ochiq!")
+        return redirect('course_list')
+
     status_filter = request.GET.get('status', 'all')
     search_q = request.GET.get('q', '').strip()
 
@@ -2005,7 +2285,7 @@ def submit_lead(request):
         if teacher_id:
             teacher = User.objects.filter(id=teacher_id).first()
 
-        Lead.objects.create(
+        lead = Lead.objects.create(
             full_name=full_name,
             phone_number=phone_number,
             interested_subject=interested_subject or "Umumiy ta'lim",
@@ -2015,10 +2295,82 @@ def submit_lead(request):
             notes=notes
         )
 
+        # 🤖 Telegram Bot orqali adminga yangi ariza (lid) haqida xabarnoma yuborish
+        notify_admin_new_lead(lead)
+
         messages.success(
             request,
             f"🎉 Rahmat, {full_name}! Bepul sinov darsiga arizangiz muvaffaqiyatli qabul qilindi. Menejerimiz tez orada {phone_number} raqamingizga qo'ng'iroq qiladi!"
         )
+
+    next_url = request.META.get('HTTP_REFERER') or 'home'
+    return redirect(next_url)
+
+
+def submit_teacher_inquiry(request):
+    """
+    O'quvchilar tomonidan ustozga o'z mutaxassislik fanidan bevosita savol berish:
+    - Birovning nomidan kirish emas, o'sha o'qituvchiga bevosita savol/maslahat so'rovi yuboriladi
+    - AJAX (JSON) yoki standart formani qo'llab-quvvatlaydi
+    """
+    if request.method == 'POST':
+        teacher_id = request.POST.get('teacher_id')
+        teacher_name = request.POST.get('teacher_name', '').strip()
+        subject = request.POST.get('subject', '').strip()
+        full_name = request.POST.get('full_name', '').strip()
+        phone_number = request.POST.get('phone_number', '').strip()
+        question_text = request.POST.get('question_text', '').strip()
+
+        teacher = None
+        if teacher_id:
+            teacher = User.objects.filter(id=teacher_id, role='teacher').first()
+        if not teacher and teacher_name:
+            teacher = User.objects.filter(
+                role='teacher'
+            ).filter(
+                Q(first_name__icontains=teacher_name) | Q(last_name__icontains=teacher_name) | Q(username__icontains=teacher_name)
+            ).first()
+
+        if not teacher:
+            teacher = User.objects.filter(role='teacher').first()
+
+        if not full_name and request.user.is_authenticated:
+            full_name = request.user.get_full_name() or request.user.username
+        if not full_name:
+            full_name = "Hurmatli O'quvchi"
+
+        if not question_text:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax'):
+                return JsonResponse({'status': 'error', 'message': "Iltimos, savolingiz matnini kiriting!"}, status=400)
+            messages.error(request, "Iltimos, savolingiz matnini kiriting!")
+            return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+        stats_text = ""
+        if request.user.is_authenticated:
+            stats = request.user.learning_stats
+            stats_text = f" (Siz platformada jami {stats['questions_display']} ta savol va {stats['lessons_display']} ta dars bajargansiz)"
+            question_text = f"{question_text}\n\n📊 [O'quvchi faolligi: {stats['summary_text']}]"
+
+        inquiry = TeacherInquiry.objects.create(
+            teacher=teacher,
+            student=request.user if request.user.is_authenticated else None,
+            full_name=full_name,
+            phone_number=phone_number,
+            subject=subject or (teacher.headline if teacher else "Umumiy ta'lim"),
+            question_text=question_text,
+        )
+
+        # 🤖 Telegram orqali adminga va ustozga bildirishnoma yuborish
+        from .telegram_service import notify_admin_teacher_inquiry
+        notify_admin_teacher_inquiry(inquiry)
+
+        teacher_display = teacher.get_full_name() if teacher else "Ustoz"
+        success_msg = f"✅ Savolingiz muvaffaqiyatli qabul qilindi!{stats_text} Ustoz {teacher_display} '{subject}' fani yuzasidan savolingizni ko'rib chiqib, tez orada sizga javob qaytaradi."
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax'):
+            return JsonResponse({'status': 'ok', 'message': success_msg, 'inquiry_id': inquiry.id})
+
+        messages.success(request, success_msg)
 
     next_url = request.META.get('HTTP_REFERER') or 'home'
     return redirect(next_url)
@@ -2040,5 +2392,44 @@ def update_lead_status(request, lead_id):
         messages.success(request, f"Lid holati yangilandi: {lead.full_name} -> {lead.get_status_display()}")
 
     return redirect('leads_management')
+
+
+@login_required
+def teacher_my_salary(request):
+    """
+    O'qituvchi uchun shaxsiy maosh va to'garaklar kabineti:
+    - Faqat o'zining oylik maoshi va stavkasi ko'rinadi
+    - O'zi dars o'tadigan to'garaklar va guruhlar ro'yxati
+    - Boshqa o'qituvchilar yoki markazning umumiy moliyasi mutlaqo ko'rinmaydi
+    """
+    if not (request.user.role == 'teacher' or request.user.is_staff or request.user.is_superuser):
+        messages.warning(request, "Ushbu sahifa faqat o'qituvchilar va ma'muriyat uchun mo'ljallangan.")
+        return redirect('course_list')
+
+    teacher = request.user
+    
+    # O'qituvchining faol guruhlari
+    my_groups = StudyGroup.objects.filter(teacher=teacher, is_active=True).select_related('room')
+    
+    # Guruhlaridagi talabalar soni
+    total_students_count = sum(g.students.count() for g in my_groups)
+    
+    # O'qituvchi dars beradigan kurslar / to'garaklar
+    my_courses = Course.objects.filter(author=teacher)
+    
+    # Oxirgi oylik maosh hisoboti (agar mavjud bo'lsa)
+    current_month = timezone.now().strftime("%Y-%m")
+    salary_record = TeacherSalary.objects.filter(teacher=teacher, month=current_month).first()
+    
+    context = {
+        'teacher': teacher,
+        'my_groups': my_groups,
+        'total_students_count': total_students_count,
+        'my_courses': my_courses,
+        'salary_record': salary_record,
+        'current_month': current_month,
+    }
+    return render(request, 'core/teacher_my_salary.html', context)
+
 
 

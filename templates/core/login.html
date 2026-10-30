@@ -5,31 +5,53 @@
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
+        <div class="col-md-6 col-lg-5 col-xl-4">
             <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
                 <div class="text-center mb-4">
-                    <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex p-3 mb-2">
+                    <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex p-3 mb-2 shadow-xs">
                         <i class="fa-solid fa-arrow-right-to-bracket fa-2x"></i>
                     </div>
-                    <h3 class="fw-bold text-dark">Tizimga Kirish</h3>
-                    <p class="text-muted small">O'quv profilingizga kirib, darslarni davom ettiring</p>
+                    <h3 class="fw-bold text-dark mb-1">Tizimga Kirish</h3>
+                    <p class="text-muted small">O'quv profilingizga kiring</p>
                 </div>
 
-                <form method="POST" action="{% url 'login' %}">
+                <form method="POST" action="{% url 'login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" id="loginForm">
                     {% csrf_token %}
 
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger py-2 px-3 small mb-3 rounded-3 d-flex align-items-center">
+                        <i class="fa-solid fa-circle-exclamation me-2 fs-5 text-danger"></i>
+                        <div>
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Foydalanuvchi nomi</label>
+                        <label class="form-label fw-semibold text-dark small">Foydalanuvchi nomi</label>
                         {{ form.username }}
+                        {% if form.username.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.username.errors }}
+                        </div>
+                        {% endif %}
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Parol</label>
+                        <label class="form-label fw-semibold text-dark small">Maxfiy Parol</label>
                         {{ form.password }}
+                        {% if form.password.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.password.errors }}
+                        </div>
+                        {% endif %}
                     </div>
 
-                    <button type="submit" class="btn btn-primary-custom w-100 py-2.5 fs-6 shadow-sm mb-3">
-                        Kirish
+                    <button type="submit" id="loginSubmitBtn" class="btn btn-primary-custom w-100 py-2.5 fs-6 shadow-sm mb-3 fw-bold">
+                        <i class="fa-solid fa-right-to-bracket me-1.5" id="loginBtnIcon"></i>
+                        <span id="loginBtnText">Profilga Kirish</span>
                     </button>
 
                     <div class="text-center text-muted small">
@@ -40,4 +62,25 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const submitBtn = document.getElementById('loginSubmitBtn');
+    const btnText = document.getElementById('loginBtnText');
+    const btnIcon = document.getElementById('loginBtnIcon');
+
+    if (loginForm && submitBtn) {
+        loginForm.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            if (btnIcon) {
+                btnIcon.className = 'fa-solid fa-spinner fa-spin me-1.5';
+            }
+            if (btnText) {
+                btnText.textContent = 'Kirilmoqda...';
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

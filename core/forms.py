@@ -49,6 +49,20 @@ class StudentRegistrationForm(UserCreationForm):
             'placeholder': 'Parolni qaytadan kiriting'
         })
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        if not username:
+            raise forms.ValidationError("Foydalanuvchi nomi kiritilishi shart.")
+        if User.objects.filter(username__iexact=username).exists():
+            raise forms.ValidationError("Ushbu foydalanuvchi nomi (username) allaqachon band. Iltimos, boshqa nom tanlang.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        if email and User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("Ushbu email manzil bilan allaqachon ro'yxatdan o'tilgan. Tizimga kiring yoki boshqa email kiriting.")
+        return email
+
 
 class UserLoginForm(AuthenticationForm):
     username = forms.CharField(

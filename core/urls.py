@@ -9,6 +9,7 @@ urlpatterns = [
     path('course/<int:course_id>/checkout/', views.checkout, name='checkout'),
     path('course/<int:course_id>/pay/', views.process_payment, name='process_payment'),
     path('teachers/', views.teachers_list, name='teachers_list'),
+    path('api/teachers/search/', views.api_search_teachers, name='api_search_teachers'),
     path('classroom/<int:lesson_id>/', views.classroom, name='classroom'),
     path('lesson/<int:lesson_id>/complete/', views.complete_lesson, name='complete_lesson'),
     path('quiz/<int:quiz_id>/', views.take_quiz, name='take_quiz'),
@@ -20,7 +21,6 @@ urlpatterns = [
     path('claim-daily-bonus/', views.claim_daily_bonus, name='claim_daily_bonus'),
     path('certificate/<str:code>/', views.certificate_detail, name='certificate_detail'),
     path('parent-report/', views.parent_report, name='parent_report'),
-    path('parent-report/<int:user_id>/', views.parent_report, name='parent_report_student'),
     path('statistics/', views.statistics_view, name='statistics'),
 
     # =========================================================================
@@ -37,8 +37,10 @@ urlpatterns = [
     path('crm/leads/', views.leads_management, name='leads_management'),
     path('crm/lead/submit/', views.submit_lead, name='submit_lead'),
     path('crm/lead/<int:lead_id>/status/', views.update_lead_status, name='update_lead_status'),
+    path('teacher/ask-question/', views.submit_teacher_inquiry, name='submit_teacher_inquiry'),
 
     path('login/', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
+    path('teacher/my-salary/', views.teacher_my_salary, name='teacher_my_salary'),
 ]

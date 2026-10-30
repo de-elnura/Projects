@@ -9,7 +9,7 @@ from .models import (
     CoinTransaction, CoinShopItem,
     Room, StudyGroup, Attendance,
     StudentPayment, TeacherSalary, Expense,
-    Lead, TeacherReview
+    Lead, TeacherReview, TelegramProfile
 )
 
 # Admin Panel Sarlavhalari
@@ -204,4 +204,11 @@ class TeacherReviewAdmin(admin.ModelAdmin):
     list_display = ('teacher', 'author_name', 'author_role', 'rating', 'exam_result', 'created_at')
     list_filter = ('rating', 'teacher')
     search_fields = ('teacher__username', 'author_name', 'comment')
+
+
+@admin.register(TelegramProfile)
+class TelegramProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'telegram_chat_id', 'telegram_username', 'linked_at')
+    search_fields = ('user__username', 'telegram_chat_id', 'telegram_username')
+    list_filter = ('linked_at',)
 

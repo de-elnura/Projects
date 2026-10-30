@@ -133,17 +133,22 @@
             <div class="col-lg-6">
                 <div class="p-3 bg-light rounded-4 border">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold text-dark small"><i class="fa-solid fa-fire text-warning me-1"></i> Kunlik Faollik Bonusi (+15 🪙)</span>
-                        {% if can_claim_streak %}
-                            <span class="badge bg-warning text-dark fw-bold">Mavjud!</span>
-                        {% else %}
-                            <span class="badge bg-success text-white fw-bold">Bugun Olingan ✅</span>
-                        {% endif %}
+                        <span class="fw-bold text-dark small"><i class="fa-solid fa-fire text-warning me-1"></i> Kunlik Tashrif (Streak)</span>
+                        <div>
+                            {% if streak_days > 0 %}
+                                <span class="badge bg-danger text-white fw-bold me-1"><i class="fa-solid fa-fire me-1"></i> {{ streak_days }} kunlik</span>
+                            {% endif %}
+                            {% if can_claim_streak %}
+                                <span class="badge bg-warning text-dark fw-bold">Mavjud!</span>
+                            {% else %}
+                                <span class="badge bg-success text-white fw-bold">Bugun Olingan ✅</span>
+                            {% endif %}
+                        </div>
                     </div>
-                    <p class="text-muted small mb-2">Har 24 soatda SkillUp platformasiga kirib kunlik tangani oling.</p>
+                    <p class="text-muted small mb-2">Platformaga har kuni kirib oshib boruvchi streak bonuslarini oling.</p>
                     {% if can_claim_streak %}
                         <a href="{% url 'claim_daily_bonus' %}" class="btn btn-warning w-100 fw-bold shadow-sm">
-                            <i class="fa-solid fa-gift me-1"></i> Bugungi +15 🪙 Bonusni Olish
+                            <i class="fa-solid fa-gift me-1"></i> Bugungi Bonusni Olish
                         </a>
                     {% else %}
                         <button class="btn btn-outline-secondary w-100 disabled" disabled>
@@ -236,6 +241,63 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Ustozlarga Yo'llangan Savollarim Bo'limi -->
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-comments text-primary me-2"></i> Ustozlarga Yo'llangan Savollarim</h4>
+            <span class="badge bg-primary-subtle text-primary fw-bold">{{ my_inquiries.count }} ta</span>
+        </div>
+
+        {% if my_inquiries %}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Sana</th>
+                                <th>Ustoz</th>
+                                <th>Fan</th>
+                                <th>Savol Matni</th>
+                                <th>Holat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inq in my_inquiries %}
+                            <tr>
+                                <td class="ps-4 small text-muted text-nowrap">{{ inq.created_at|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    <strong>{{ inq.teacher.get_full_name|default:inq.teacher.username }}</strong>
+                                </td>
+                                <td><span class="badge bg-light text-dark border">{{ inq.subject }}</span></td>
+                                <td class="small text-secondary" style="max-width: 320px;">
+                                    {{ inq.question_text|truncatechars:120 }}
+                                </td>
+                                <td>
+                                    {% if inq.is_answered %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">
+                                            <i class="fa-solid fa-circle-check me-1"></i> Javob berildi
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1">
+                                            <i class="fa-solid fa-clock me-1"></i> Ko'rib chiqilmoqda
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="bg-light p-4 rounded-4 text-center border">
+                <i class="fa-regular fa-comment-dots fa-3x text-muted mb-2"></i>
+                <h6 class="fw-bold text-dark mb-1">Hozircha ustozlarga savol yo'llamadingiz</h6>
+                <p class="text-muted small mb-0">Yuqori qismdagi "Ustozga Savol" tugmasi orqali darslar bo'yicha murabbiylarga bevosita savol berishingiz mumkin.</p>
+            </div>
+        {% endif %}
+    </div>
 
     <!-- EduCoin Tranzaksiyalari Tarixi -->
     <div class="mb-5">

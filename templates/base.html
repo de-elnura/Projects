@@ -50,72 +50,6 @@
             color: var(--primary);
         }
 
-        .xp-badge {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            color: #b45309;
-            font-weight: 700;
-            padding: 0.45rem 0.9rem;
-            border-radius: 9999px;
-            border: 1px solid #fcd34d;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.9rem;
-        }
-
-        .coin-pill {
-            background: linear-gradient(135deg, #fffbeb, #fef3c7);
-            color: #b45309;
-            font-weight: 800;
-            padding: 0.45rem 0.95rem;
-            border-radius: 9999px;
-            border: 1px solid #fde68a;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.45rem;
-            font-size: 0.9rem;
-            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15);
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .coin-pill:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
-            color: #92400e;
-        }
-
-        .coin-spin {
-            display: inline-block;
-            font-size: 1.1rem;
-            animation: coin-glow 2.5s infinite alternate;
-        }
-
-        @keyframes coin-glow {
-            0% { transform: scale(1); filter: drop-shadow(0 0 2px #f59e0b); }
-            100% { transform: scale(1.15) rotate(8deg); filter: drop-shadow(0 0 8px #f59e0b); }
-        }
-
-        .vip-crown-badge {
-            background: linear-gradient(135deg, #ffd700, #ffae00);
-            color: #1e1b4b;
-            font-weight: 800;
-            padding: 0.25rem 0.65rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.65);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            border: 1px solid #ffffff;
-            animation: pulse-vip 3s infinite ease-in-out;
-        }
-
-        @keyframes pulse-vip {
-            0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
-            50% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.9); }
-        }
-
         .btn-primary-custom {
             background-color: var(--primary);
             color: white;
@@ -148,100 +82,126 @@
 </head>
 <body>
 
-    <!-- Yuqori Menyu (Navbar) -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <!-- Yuqori Menyu (Navbar) — Mohirdev Uslubidagi Toza Dizayn -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top py-2.5">
         <div class="container-fluid px-lg-4">
-            <a class="navbar-brand" href="{% url 'course_list' %}">
-                <i class="fa-solid fa-graduation-cap fa-lg"></i>
-                <span>SkillUp <small class="text-muted fw-normal fs-6">| EduQuiz</small></span>
+            <!-- Logotip -->
+            <a class="navbar-brand me-lg-4" href="{% url 'course_list' %}">
+                <i class="fa-solid fa-graduation-cap fa-lg text-primary"></i>
+                <span class="fw-extrabold tracking-tight">SkillUp</span>
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <!-- Tepadagi Tezkor Qidiruv (Katta ekranlar uchun) -->
+            <form method="GET" action="{% url 'course_list' %}" class="d-none d-md-flex align-items-center me-auto" style="min-width: 280px; max-width: 420px; width: 100%;">
+                <div class="input-group input-group-sm w-100 shadow-xs rounded-pill overflow-hidden border">
+                    <span class="input-group-text bg-light border-0 ps-3 text-muted">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ query|default:'' }}" class="form-control bg-light border-0 py-2 fs-6" placeholder="To'garak, fan yoki kasb qidirish...">
+                    {% if query %}
+                        <a href="{% url 'course_list' %}" class="input-group-text bg-light border-0 text-muted pe-3" title="Tozalash">
+                            <i class="fa-solid fa-xmark"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <!-- Mobil qidiruv qutisi -->
+                <form method="GET" action="{% url 'course_list' %}" class="d-md-none my-3">
+                    <div class="input-group shadow-xs rounded-pill overflow-hidden border">
+                        <span class="input-group-text bg-light border-0 ps-3 text-muted">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" name="q" value="{{ query|default:'' }}" class="form-control bg-light border-0 py-2" placeholder="Kurs yoki kasb qidirish...">
+                    </div>
+                </form>
+
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-1 gap-lg-2">
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold text-dark px-3" href="{% url 'course_list' %}">
+                        <a class="nav-link fw-semibold text-dark px-3 py-2 rounded-pill hover-bg-light" href="{% url 'course_list' %}">
                             <i class="fa-solid fa-book-open me-1 text-primary"></i> Kurslar
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold text-dark px-3" href="{% url 'teachers_list' %}">
-                            <i class="fa-solid fa-chalkboard-user me-1 text-success"></i> O'qituvchilar
+                        <a class="nav-link fw-semibold text-dark px-3 py-2 rounded-pill hover-bg-light" href="{% url 'teachers_list' %}">
+                            <i class="fa-solid fa-chalkboard-user me-1 text-primary"></i> O'qituvchilar
                         </a>
                     </li>
+
+                    <!-- Alohida Chegirmalar Tugmasi (Modalni ochadi) -->
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold text-dark px-3" href="{% url 'leaderboard' %}">
-                            <i class="fa-solid fa-trophy me-1 text-warning"></i> Reyting
-                        </a>
+                        <button type="button" class="btn btn-outline-danger btn-sm fw-bold px-3 py-1.5 rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#globalDiscountsModal" title="Maxsus paket chegirmalari">
+                            <i class="fa-solid fa-tags"></i>
+                            <span>Chegirmalar %</span>
+                        </button>
                     </li>
+
+                    <!-- Statistika (Foydalanuvchi buyurtmasiga ko'ra faqat Adminga ko'rinadi) -->
+                    {% if user.is_authenticated and user.is_staff %}
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold text-dark px-3" href="{% url 'coin_shop' %}">
-                            <i class="fa-solid fa-coins me-1 text-warning"></i> EduCoin Do'koni
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold text-danger px-3" href="{% url 'bundle_enroll' %}" title="2 kursga 50k, 3 kursga 100k chegirma">
-                            <i class="fa-solid fa-tags me-1"></i> Paket Chegirma
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold text-dark px-3" href="{% url 'statistics' %}" title="O'qituvchilar va O'quvchilar Statistikasi">
+                        <a class="nav-link fw-semibold text-dark px-3 py-2 rounded-pill hover-bg-light" href="{% url 'statistics' %}" title="Platforma Statistikasi">
                             <i class="fa-solid fa-chart-pie me-1 text-info"></i> Statistika
                         </a>
                     </li>
+                    {% endif %}
+
+                    <!-- 👑 FAQAT ADMINISTRATOR MENYUSI -->
+                    {% if user.is_authenticated and user.is_staff %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle fw-bold text-primary px-3" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-building-user me-1 text-primary"></i> Markaz ERP
+                        <a class="nav-link dropdown-toggle fw-semibold text-secondary px-3 py-2" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-building-user me-1 text-danger"></i> Boshqaruv (Admin)
                         </a>
-                        <ul class="dropdown-menu shadow-sm">
+                        <ul class="dropdown-menu shadow-sm border-0 rounded-3">
                             <li><a class="dropdown-item py-2" href="{% url 'erp_dashboard' %}"><i class="fa-solid fa-gauge-high me-2 text-primary"></i> ERP Dashboard</a></li>
                             <li><a class="dropdown-item py-2" href="{% url 'finance_dashboard' %}"><i class="fa-solid fa-coins me-2 text-success"></i> Moliya & Kassa</a></li>
-                            <li><a class="dropdown-item py-2" href="{% url 'timetable' %}"><i class="fa-solid fa-calendar-days me-2 text-warning"></i> Dars Jadvali & Xonalar</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'timetable' %}"><i class="fa-solid fa-calendar-days me-2 text-warning"></i> Dars Jadvali</a></li>
                             <li><a class="dropdown-item py-2" href="{% url 'attendance' %}"><i class="fa-solid fa-clipboard-user me-2 text-info"></i> Davomat Tizimi</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item py-2" href="{% url 'leads_management' %}"><i class="fa-solid fa-users-viewfinder me-2 text-danger"></i> CRM Lidlar (Arizalar)</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'leads_management' %}"><i class="fa-solid fa-users-viewfinder me-2 text-danger"></i> CRM Lidlar</a></li>
                         </ul>
                     </li>
+                    {% endif %}
+
+                    <!-- 👨‍🏫 FAQAT O'QITUVCHI (USTOZ KABINETI) MENYUSI -->
+                    {% if user.is_authenticated and not user.is_staff and user.role == 'teacher' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle fw-semibold text-dark px-3 py-2" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-chalkboard-user me-1 text-primary"></i> Ustoz Kabineti
+                        </a>
+                        <ul class="dropdown-menu shadow-sm border-0 rounded-3">
+                            <li><a class="dropdown-item py-2" href="{% url 'teacher_my_salary' %}"><i class="fa-solid fa-wallet me-2 text-success"></i> Mening Maoshim & To'garaklarim</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'timetable' %}"><i class="fa-solid fa-calendar-days me-2 text-warning"></i> Dars Jadvalim</a></li>
+                            <li><a class="dropdown-item py-2" href="{% url 'attendance' %}"><i class="fa-solid fa-clipboard-user me-2 text-info"></i> Davomat Olish</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
                 </ul>
 
-                <div class="d-flex align-items-center gap-2 gap-md-3">
-                    <button class="btn btn-warning btn-sm fw-bold px-3 py-1.5 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#globalTrialModal">
-                        <i class="fa-solid fa-calendar-plus me-1"></i> Sinov Darsi
+                <div class="d-flex align-items-center gap-2 ms-lg-3 mt-2 mt-lg-0">
+                    
+
+                    <!-- 💬 Ustozlarga Savol Berish Katalogi Tugmasi -->
+                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 py-2 fw-bold d-flex align-items-center gap-2 shadow-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#teacherQuestionsDirectoryModal" title="O'qituvchilarga o'z fanidan savol berish">
+                        <i class="fa-solid fa-comments"></i>
+                        <span class="d-none d-sm-inline">Ustozga Savol Berish</span>
                     </button>
+
                     {% if user.is_authenticated %}
-                        <a href="{% url 'coin_shop' %}" class="coin-pill" title="Sizning EduCoin balansingiz — Do'konda sarflang!">
-                            <span class="coin-spin">🪙</span>
-                            <span>{{ user.edu_coins }}</span>
-                            <small class="d-none d-sm-inline opacity-75">EduCoin</small>
-                        </a>
-
-                        <div class="xp-badge" title="Sizning jami tajriba ballaringiz">
-                            <i class="fa-solid fa-bolt text-warning"></i>
-                            <span>{{ user.total_xp }} XP</span>
-                        </div>
-
-                        {% if user.has_vip_badge %}
-                            <span class="vip-crown-badge d-none d-sm-inline-flex" title="Oltin VIP Nishoni">
-                                <i class="fa-solid fa-crown text-dark"></i> VIP
-                            </span>
-                        {% endif %}
-
                         <div class="dropdown">
-                            <a class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border" href="#" role="button" data-bs-toggle="dropdown">
+                            <a class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border rounded-pill px-3 py-1.5" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="fa-solid fa-circle-user fa-lg text-primary"></i>
-                                <span class="fw-bold">{{ user.first_name|default:user.username }}</span>
+                                <span class="fw-bold text-dark">{{ user.first_name|default:user.username }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-1">
                                 <li>
                                     <div class="px-3 py-2 border-bottom">
                                         <div class="fw-bold text-dark">{{ user.get_full_name|default:user.username }}</div>
-                                        <div class="small text-muted">🪙 {{ user.edu_coins }} EduCoin &bull; {{ user.total_xp }} XP</div>
-                                        {% if user.has_vip_badge %}
-                                            <span class="badge bg-warning text-dark mt-1"><i class="fa-solid fa-crown"></i> VIP Talaba</span>
-                                        {% endif %}
+                                        <div class="small text-muted">@{{ user.username }} ({{ user.get_role_display }})</div>
                                     </div>
                                 </li>
                                 <li>
@@ -250,30 +210,26 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item py-2" href="{% url 'coin_shop' %}">
-                                        <i class="fa-solid fa-store me-2 text-warning"></i> EduCoin Do'koni & Kvestlar
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item py-2" href="{% url 'claim_daily_bonus' %}">
-                                        <i class="fa-solid fa-fire me-2 text-danger"></i> Kunlik Bonus (+15 🪙)
-                                    </a>
-                                </li>
-                                <li>
                                     <a class="dropdown-item py-2" href="{% url 'parent_report' %}">
-                                        <i class="fa-solid fa-file-invoice me-2 text-info"></i> Ota-onalar Hisoboti (PDF)
+                                        <i class="fa-solid fa-file-invoice me-2 text-info"></i> Ota-onalar Hisoboti
                                     </a>
                                 </li>
+                                {% if user.is_staff %}
                                 <li>
                                     <a class="dropdown-item py-2" href="{% url 'statistics' %}">
-                                        <i class="fa-solid fa-chart-line me-2 text-primary"></i> Umumiy Platforma Statistikasi
+                                        <i class="fa-solid fa-chart-line me-2 text-primary"></i> Platforma Statistikasi
                                     </a>
                                 </li>
-                                {% if user.is_staff or user.is_teacher %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item py-2" href="/admin/" target="_blank">
                                         <i class="fa-solid fa-gear me-2 text-secondary"></i> Admin Boshqaruv Paneli
+                                    </a>
+                                </li>
+                                {% elif user.role == 'teacher' %}
+                                <li>
+                                    <a class="dropdown-item py-2" href="{% url 'teacher_my_salary' %}">
+                                        <i class="fa-solid fa-wallet me-2 text-success"></i> Mening Maoshim & To'garaklarim
                                     </a>
                                 </li>
                                 {% endif %}
@@ -286,8 +242,8 @@
                             </ul>
                         </div>
                     {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-outline-secondary fw-semibold">Kirish</a>
-                        <a href="{% url 'register' %}" class="btn btn-primary-custom">Ro'yxatdan o'tish</a>
+                        <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm fw-semibold rounded-pill px-3 py-1.5">Kirish</a>
+                        <a href="{% url 'register' %}" class="btn btn-primary-custom btn-sm rounded-pill px-3 py-1.5">Ro'yxatdan o'tish</a>
                     {% endif %}
                 </div>
             </div>
@@ -328,6 +284,89 @@
             </p>
         </div>
     </footer>
+
+    <!-- 🎁 MAXSUS CHEGIRMALAR MODALI (Ota-onalar va O'quvchilar uchun) -->
+    <div class="modal fade" id="globalDiscountsModal" tabindex="-1" aria-labelledby="globalDiscountsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-0 text-white p-4" style="background: linear-gradient(135deg, #1e1b4b, #312e81, #4338ca);">
+                    <div>
+                        <span class="badge bg-warning text-dark fw-bold px-3 py-1 rounded-pill mb-2">
+                            <i class="fa-solid fa-tags me-1"></i> Maxsus Paket Chegirmalari
+                        </span>
+                        <h4 class="modal-title fw-extrabold text-white mb-1" id="globalDiscountsModalLabel">
+                            Ko'proq O'rganing — Katta Chegirma Oling!
+                        </h4>
+                        <p class="small text-light opacity-90 mb-0">
+                            Farzandingiz bir vaqtda 2 yoki undan ortiq to'garakka qatnashsa, har oy uchun kafolatlangan chegirma beriladi.
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white align-self-start" data-bs-dismiss="modal" aria-label="Yopish"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <div class="row g-3">
+                        <!-- 2 ta kurs paketi -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border-2 border-primary rounded-4 p-4 bg-white shadow-sm position-relative d-flex flex-column">
+                                <div class="badge bg-primary text-white position-absolute top-0 end-0 m-3 px-3 py-1.5 rounded-pill fw-bold">
+                                    ~20% Tejamkorlik
+                                </div>
+                                <div class="fs-1 text-primary mb-2">🎁</div>
+                                <h5 class="fw-bold text-dark mb-1">2 ta To'garak Paketi</h5>
+                                <p class="text-muted small mb-3">
+                                    Masalan: Dasturlash + Ingliz tili yoki Matematika + Shaxmat
+                                </p>
+                                <div class="p-3 bg-primary-subtle rounded-3 mb-3 text-center border border-primary-subtle">
+                                    <div class="text-primary fw-extrabold fs-2">-50 000 so'm</div>
+                                    <small class="text-dark fw-semibold">oylik to'lovdan avtomatik chegirma</small>
+                                </div>
+                                <ul class="list-unstyled small text-muted mb-4">
+                                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Toq va juft kunlar qulay taqsimlanadi</li>
+                                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Ertadanoq mashg'ulotlar boshlanadi</li>
+                                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Barcha dars yozuvlari va amaliy mashqlar</li>
+                                </ul>
+                                <a href="{% url 'bundle_enroll' %}" class="btn btn-outline-primary fw-bold rounded-pill w-100 mt-auto py-2">
+                                    2 ta Kurs Tanlash &rarr;
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 3 ta va undan ortiq kurs paketi -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border-2 border-warning rounded-4 p-4 bg-white shadow-sm position-relative d-flex flex-column" style="background: linear-gradient(180deg, #fffdf5, #ffffff);">
+                                <div class="badge bg-warning text-dark position-absolute top-0 end-0 m-3 px-3 py-1.5 rounded-pill fw-extrabold shadow-xs">
+                                    Eng Foydali &bull; ~35%
+                                </div>
+                                <div class="fs-1 text-warning mb-2">🔥</div>
+                                <h5 class="fw-bold text-dark mb-1">3 ta va Undan Ortiq</h5>
+                                <p class="text-muted small mb-3">
+                                    To'liq rivojlanish: Kasb + Til + Mantiq/Sport to'garaklari
+                                </p>
+                                <div class="p-3 bg-warning-subtle rounded-3 mb-3 text-center border border-warning-subtle">
+                                    <div class="text-dark fw-extrabold fs-2">-100 000 so'm</div>
+                                    <small class="text-dark fw-semibold">oylik to'lovdan kafolatlangan chegirma</small>
+                                </div>
+                                <ul class="list-unstyled small text-muted mb-4">
+                                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Maksimal bilim va murabbiylarning shaxsiy nazorati</li>
+                                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Ota-onalar uchun batafsil oylik hisobot</li>
+                                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i> Kurs yakunida QR-kodli rasmiy Sertifikat</li>
+                                </ul>
+                                <a href="{% url 'bundle_enroll' %}" class="btn btn-warning fw-extrabold rounded-pill w-100 mt-auto py-2 shadow-sm text-dark">
+                                    3+ Kurs Tanlash & Chegirma Olish &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-0 p-3 d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fa-solid fa-circle-info text-primary me-1"></i> Chegirma paket tanlash va to'lov vaqtida avtomatik ravishda qo'llanadi.
+                    </small>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Yopish</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Global Bepul Sinov Darsi Modali -->
     <div class="modal fade" id="globalTrialModal" tabindex="-1" aria-hidden="true">
@@ -376,8 +415,534 @@
         </div>
     </div>
 
+    <!-- =================================================================== -->
+    <!-- 👨‍🏫 O'QITUVCHILAR KATALOGI — O'Z FANIDAN SAVOL BERISH MODALI           -->
+    <!-- (Hech qanday parol yoki boshqaning nomidan kirishsiz, faqat savol berish) -->
+    <!-- =================================================================== -->
+    <div class="modal fade" id="teacherQuestionsDirectoryModal" tabindex="-1" aria-labelledby="teacherQuestionsDirectoryLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-gradient bg-primary text-white p-3 p-md-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
+                        <div>
+                            <h4 class="modal-title fw-bold mb-1" id="teacherQuestionsDirectoryLabel">Ustozlar Katalogi — O'z Fanidan Savol Berish</h4>
+                            <p class="mb-0 text-white-50 small">
+                                Kerakli ustozni tanlang va o'zingizni qiziqtirgan fan yoki mavzu bo'yicha bevosita savol yo'llang.
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Yopish"></button>
+                </div>
+
+                <!-- Qidiruv va Toifalar Qatori -->
+                <div class="bg-light p-3 border-bottom">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-6">
+                            <div class="input-group input-group-sm rounded-pill border bg-white shadow-xs overflow-hidden">
+                                <span class="input-group-text bg-white border-0 ps-3 text-primary">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </span>
+                                <input type="text" id="teacherDirectorySearchInput" class="form-control border-0 py-2" placeholder="O'qituvchi ismi yoki fan bo'yicha tezkor qidirish...">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex flex-wrap gap-1 justify-content-md-end">
+                                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 filter-teacher-btn active" data-category="all">Barchasi</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 filter-teacher-btn" data-category="sport">⚽ Sport</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 filter-teacher-btn" data-category="it">💻 IT & Dasturlash</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 filter-teacher-btn" data-category="lang">🇬🇧 Tillar</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 filter-teacher-btn" data-category="school">📐 Aniq Fanlar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ustozlar Kartochkalari (9 ta ustoz kartochkasi) -->
+                <div class="modal-body p-3 p-md-4">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="teachersCardsGrid">
+
+                        <!-- 1. Farrux Zohidov (Futbol) -->
+                        <div class="col teacher-card-item" data-category="sport" data-name="Farrux Zohidov" data-subject="Futbol To'garagi">
+                            <div class="card h-100 border shadow-xs rounded-4 p-3 hover-shadow transition">
+                                <div class="d-flex align-items-start gap-3 mb-2">
+                                    <div class="rounded-circle bg-success-subtle border border-success d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px; font-size: 1.8rem;">
+                                        ⚽
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h6 class="fw-bold text-dark mb-0 text-truncate">Farrux Zohidov</h6>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small">Sport</span>
+                                        </div>
+                                        <div class="text-primary fw-semibold small">Futbol Murabbiyi</div>
+                                        <div class="text-muted small text-truncate" style="font-size: 0.78rem;">UEFA 'B' Litsenziyali Ustoz</div>
+                                    </div>
+                                </div>
+                                <div class="bg-light rounded-3 p-2 small mb-3">
+                                    <div class="text-secondary"><i class="fa-regular fa-clock text-success me-1"></i> Dush - Chor - Juma (16:00 - 18:00)</div>
+                                    <div class="text-secondary"><i class="fa-solid fa-location-dot text-danger me-1"></i> Markaziy Stadion Maydoni</div>
+                                </div>
+                                <div class="mt-auto">
+                                    <button type="button" class="btn btn-success rounded-pill w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-xs"
+                                            onclick="openAskTeacherModal('Farrux Zohidov', 'Futbol To'garagi', '⚽', 195)">
+                                        <i class="fa-solid fa-comment-dots"></i>
+                                        <span>Futbol bo'yicha savol berish</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Sardor Olimov (Shaxmat) -->
+                        <div class="col teacher-card-item" data-category="sport" data-name="Sardor Olimov" data-subject="Shaxmat To'garagi">
+                            <div class="card h-100 border shadow-xs rounded-4 p-3 hover-shadow transition">
+                                <div class="d-flex align-items-start gap-3 mb-2">
+                                    <div class="rounded-circle bg-primary-subtle border border-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px; font-size: 1.8rem;">
+                                        ♟️
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h6 class="fw-bold text-dark mb-0 text-truncate">Sardor Olimov</h6>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small">Shaxmat</span>
+                                        </div>
+                                        <div class="text-primary fw-semibold small">FIDE Trainer / Grossmeyster</div>
+                                        <div class="text-muted small text-truncate" style="font-size: 0.78rem;">Xalqaro toifadagi shaxmat ustasi</div>
+                                    </div>
+                                </div>
+                                <div class="bg-light rounded-3 p-2 small mb-3">
+                                    <div class="text-secondary"><i class="fa-regular fa-clock text-primary me-1"></i> Sesh - Pay - Shanba (15:00 - 17:00)</div>
+                                    <div class="text-secondary"><i class="fa-solid fa-trophy text-warning me-1"></i> Mantiq & Strategiya Kursi</div>
+                                </div>
+                                <div class="mt-auto">
+                                    <button type="button" class="btn btn-primary rounded-pill w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-xs"
+                                            onclick="openAskTeacherModal('Sardor Olimov', 'Shaxmat To'garagi', '♟️', 193)">
+                                        <i class="fa-solid fa-comment-dots"></i>
+                                        <span>Shaxmat bo'yicha savol berish</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Sanjar Qosimov (Stol Tennisi) -->
+                        <div class="col teacher-card-item" data-category="sport" data-name="Sanjar Qosimov" data-subject="Stol Tennisi (Ping-Pong)">
+                            <div class="card h-100 border shadow-xs rounded-4 p-3 hover-shadow transition">
+                                <div class="d-flex align-items-start gap-3 mb-2">
+                                    <div class="rounded-circle bg-info-subtle border border-info d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px; font-size: 1.8rem;">
+                                        🏓
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h6 class="fw-bold text-dark mb-0 text-truncate">Sanjar Qosimov</h6>
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill small">Ping-Pong</span>
+                                        </div>
+                                        <div class="text-primary fw-semibold small">Stol Tennisi Sport Ustasi</div>
+                                        <div class="text-muted small text-truncate" style="font-size: 0.78rem;">Turnirlar & Chempionat Kuratori</div>
+                                    </div>
+                                </div>
+                                <div class="bg-light rounded-3 p-2 small mb-3">
+                                    <div class="text-secondary"><i class="fa-regular fa-clock text-info me-1"></i> Dush - Chor - Juma (17:00 - 19:00)</div>
+                                    <div class="text-secondary"><i class="fa-solid fa-dumbbell text-success me-1"></i> Sport Zali (B Blok)</div>
+                                </div>
+                                <div class="mt-auto">
+                                    <button type="button" class="btn btn-info text-white rounded-pill w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-xs"
+                                            onclick="openAskTeacherModal('Sanjar Qosimov', 'Stol Tennisi (Ping-Pong)', '🏓', 197)">
+                                        <i class="fa-solid fa-comment-dots"></i>
+                                        <span>Stol tennisi bo'yicha savol berish</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Anvar Qodirov (Python Backend) -->
+                        <div class="col teacher-card-item" data-category="it" data-name="Anvar Qodirov" data-subject="Python & Django Backend">
+                            <div class="card h-100 border shadow-xs rounded-4 p-3 hover-shadow transition">
+                                <div class="d-flex align-items-start gap-3 mb-2">
+                                    <div class="rounded-circle bg-warning-subtle border border-warning d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px; font-size: 1.8rem;">
+                                        🐍
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h6 class="fw-bold text-dark mb-0 text-truncate">Anvar Qodirov</h6>
+                                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill small">Python</span>
+                                        </div>
+                                        <div class="text-primary fw-semibold small">Senior Backend Architect</div>
+                                        <div class="text-muted small text-truncate" style="font-size: 0.78rem;">Python, Django, PostgreSQL, REST API</div>
+                                    </div>
+                                </div>
+                                <div class="bg-light rounded-3 p-2 small mb-3">
+                                    <div class="text-secondary"><i class="fa-regular fa-clock text-warning me-1"></i> Dush - Chor - Juma (19:00 - 21:00)</div>
+                                    <div class="text-secondary"><i class="fa-solid fa-code text-primary me-1"></i> Katta Dasturchilik Kampi</div>
+                                </div>
+                                <div class="mt-auto">
+                                    <button type="button" class="btn btn-warning fw-bold text-dark rounded-pill w-100 py-2 d-flex align-items-center justify-content-center gap-2 shadow-xs"
+                                            onclick="openAskTeacherModal('Anvar Qodirov', 'Python & Django Backend', '🐍', 7)">
+                                        <i class="fa-solid fa-comment-dots"></i>
+                                        <span>Python bo'yicha savol berish</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Malika Rustamova (Frontend) -->
+                        <div class="col teacher-card-item" data-category="it" data-name="Malika Rustamova" data-subject="Frontend & React.js">
+                            <div class="card h-100 border shadow-xs rounded-4 p-3 hover-shadow transition">
+                                <div class="d-flex align-items-start gap-3 mb-2">
+                                    <div class="rounded-circle bg-primary-subtle border border-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px; font-size: 1.8rem;">
+                                        💻
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h6 class="fw-bold text-dark mb-0 text-truncate">Malika Rustamova</h6>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small">Frontend</span>
+                                        </div>
+                                        <div class="text-primary fw-semibold small">Senior Frontend Lead</div>
+                                        <div class="text-muted small text-truncate" style="font-size: 0.78rem;">React, TypeScript, UI/UX Dizayn</div>
+                                    </div>
+                                </div>
+                                <div class="bg-light rounded-3 p-2 small mb-3">
+                                    <div class="text-secondary"><i class="fa-regular fa-clock text-primary me-1"></i> Sesh - Pay - Shanba (14:00 - 16:00)</div>
+                                    <div class="text-secondary"><i class="fa-solid fa-laptop-code text-info me-1"></i> Interaktiv Veb Dasturlash</div>
+                                </div>
+                                <div class="mt-auto">
+                                    <button type="button" class="btn btn-primary rounded-pill w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-xs"
+                                            onclick="openAskTeacherModal('Malika Rustamova', 'Frontend & React.js', '💻', 8)">
+                                        <i class="fa-solid fa-comment-dots"></i>
+                                        <span>Frontend bo'yicha savol berish</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. Bobur Mirzayev (Sun'iy Intellekt) -->
+                        <div class="col teacher-card-item" data-category="it" data-name="Bobur Mirzayev" data-subject="Sun'iy Intellekt & Data Science">
+                            <div class="card h-100 border shadow-xs rounded-4 p-3 hover-shadow transition">
+                                <div class="d-flex align-items-start gap-3 mb-2">
+                                    <div class="rounded-circle bg-purple-subtle border border-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px; font-size: 1.8rem; background-color: #f3e8ff;">
+                                        🤖
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h6 class="fw-bold text-dark mb-0 text-truncate">Bobur Mirzayev</h6>
+                                            <span class="badge bg-dark text-white rounded-pill small">AI & ML</span>
+                                        </div>
+                                        <div class="text-primary fw-semibold small">AI Research Scientist</div>
+                                        <div class="text-muted small text-truncate" style="font-size: 0.78rem;">Machine Learning & Katta Ma'lumotlar</div>
+                                    </div>
+                                </div>
+                                <div class="bg-light rounded-3 p-2 small mb-3">
+                                    <div class="text-secondary"><i class="fa-regular fa-clock text-dark me-1"></i> Sesh - Pay - Shanba (18:30 - 20:30)</div>
+                                    <div class="text-secondary"><i class="fa-solid fa-brain text-primary me-1"></i> Sun'iy Ong & Neyrotarmoqlar</div>
+                                </div>
+                                <div class="mt-auto">
+                                    <button type="button" class="btn btn-dark rounded-pill w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-xs"
+                                            onclick="openAskTeacherModal('Bobur Mirzayev', 'Sun'iy Intellekt & Data Science', '🤖', 9)">
+                                        <i class="fa-solid fa-comment-dots"></i>
+                                        <span>Sun'iy intellekt bo'yicha savol berish</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 7. Gulnoza Saidova (IELTS) -->
+                        <div class="col teacher-card-item" data-category="lang" data-name="Gulnoza Saidova" data-subject="IELTS & Ingliz Tili">
+                            <div class="card h-100 border shadow-xs rounded-4 p-3 hover-shadow transition">
+                                <div class="d-flex align-items-start gap-3 mb-2">
+                                    <div class="rounded-circle bg-danger-subtle border border-danger d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px; font-size: 1.8rem;">
+                                        🇬🇧
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h6 class="fw-bold text-dark mb-0 text-truncate">Gulnoza Saidova</h6>
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill small">IELTS 8.5</span>
+                                        </div>
+                                        <div class="text-primary fw-semibold small">IELTS Master Instructor</div>
+                                        <div class="text-muted small text-truncate" style="font-size: 0.78rem;">British Council Alumna & C2 daraja</div>
+                                    </div>
+                                </div>
+                                <div class="bg-light rounded-3 p-2 small mb-3">
+                                    <div class="text-secondary"><i class="fa-regular fa-clock text-danger me-1"></i> Dush - Chor - Juma (10:00 - 12:00)</div>
+                                    <div class="text-secondary"><i class="fa-solid fa-certificate text-warning me-1"></i> Speaking & Writing Intensiv</div>
+                                </div>
+                                <div class="mt-auto">
+                                    <button type="button" class="btn btn-danger rounded-pill w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-xs"
+                                            onclick="openAskTeacherModal('Gulnoza Saidova', 'IELTS & Ingliz Tili', '🇬🇧', 16)">
+                                        <i class="fa-solid fa-comment-dots"></i>
+                                        <span>IELTS bo'yicha savol berish</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 8. Otabek Xoliqov (Matematika) -->
+                        <div class="col teacher-card-item" data-category="school" data-name="Otabek Xoliqov" data-subject="Oliy Matematika & Mantiq">
+                            <div class="card h-100 border shadow-xs rounded-4 p-3 hover-shadow transition">
+                                <div class="d-flex align-items-start gap-3 mb-2">
+                                    <div class="rounded-circle bg-secondary-subtle border border-secondary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px; font-size: 1.8rem;">
+                                        📐
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h6 class="fw-bold text-dark mb-0 text-truncate">Otabek Xoliqov</h6>
+                                            <span class="badge bg-secondary-subtle text-dark border rounded-pill small">Matematika</span>
+                                        </div>
+                                        <div class="text-primary fw-semibold small">Oliy Toifali Matematik</div>
+                                        <div class="text-muted small text-truncate" style="font-size: 0.78rem;">DTM & Milliy Olimpiada Eksperti</div>
+                                    </div>
+                                </div>
+                                <div class="bg-light rounded-3 p-2 small mb-3">
+                                    <div class="text-secondary"><i class="fa-regular fa-clock text-secondary me-1"></i> Sesh - Pay - Shanba (09:00 - 11:00)</div>
+                                    <div class="text-secondary"><i class="fa-solid fa-square-root-variable text-primary me-1"></i> Analitik & Mantiqiy Fikrlash</div>
+                                </div>
+                                <div class="mt-auto">
+                                    <button type="button" class="btn btn-secondary rounded-pill w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-xs"
+                                            onclick="openAskTeacherModal('Otabek Xoliqov', 'Oliy Matematika & Mantiq', '📐', 192)">
+                                        <i class="fa-solid fa-comment-dots"></i>
+                                        <span>Matematika bo'yicha savol berish</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 9. Nilufar Karimova (Rus tili) -->
+                        <div class="col teacher-card-item" data-category="lang" data-name="Nilufar Karimova" data-subject="Rus Tili & Erkin Muloqot">
+                            <div class="card h-100 border shadow-xs rounded-4 p-3 hover-shadow transition">
+                                <div class="d-flex align-items-start gap-3 mb-2">
+                                    <div class="rounded-circle bg-primary-subtle border border-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 54px; height: 54px; font-size: 1.8rem;">
+                                        🇷🇺
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <h6 class="fw-bold text-dark mb-0 text-truncate">Nilufar Karimova</h6>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill small">Rus Tili</span>
+                                        </div>
+                                        <div class="text-primary fw-semibold small">Rus Tili Filologiyasi</div>
+                                        <div class="text-muted small text-truncate" style="font-size: 0.78rem;">Erkin So'zlashuv & Grammatika</div>
+                                    </div>
+                                </div>
+                                <div class="bg-light rounded-3 p-2 small mb-3">
+                                    <div class="text-secondary"><i class="fa-regular fa-clock text-primary me-1"></i> Dush - Chor - Juma (14:00 - 16:00)</div>
+                                    <div class="text-secondary"><i class="fa-solid fa-comments text-info me-1"></i> Amaliy Muloqot Klublari</div>
+                                </div>
+                                <div class="mt-auto">
+                                    <button type="button" class="btn btn-outline-primary rounded-pill w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-xs"
+                                            onclick="openAskTeacherModal('Nilufar Karimova', 'Rus Tili & Erkin Muloqot', '🇷🇺', 191)">
+                                        <i class="fa-solid fa-comment-dots"></i>
+                                        <span>Rus tili bo'yicha savol berish</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id="noTeacherCardsFound" class="text-center py-4 text-muted d-none">
+                        <i class="fa-solid fa-user-slash fa-2x mb-2 text-secondary"></i>
+                        <h6>Qidiruv bo'yicha o'qituvchi topilmadi</h6>
+                        <p class="small mb-0">Iltimos, boshqa ism yoki toifani tanlang.</p>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-0 p-3 d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fa-solid fa-shield-halved text-success me-1"></i> Xavfsiz tizim: Savollaringiz to'g'ridan-to'g'ri o'qituvchining kabinetiga yuboriladi.
+                    </small>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Yopish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 💬 INTERAKTIV SAVOL BERISH MODALI (AskTeacherModal)                 -->
+    <!-- =================================================================== -->
+    <div class="modal fade" id="askTeacherQuestionModal" tabindex="-1" aria-labelledby="askTeacherModalTitle" aria-hidden="true" style="z-index: 1065;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-primary text-white p-3">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <span id="askTeacherAvatarEmoji" class="fs-3">👨‍🏫</span>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="askTeacherModalTitle">Ustozga Savol Berish</h5>
+                            <div class="small text-white-50" id="askTeacherSubjectBadge">O'z mutaxassislik fani bo'yicha</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Yopish"></button>
+                </div>
+
+                <form id="askTeacherInquiryForm" action="{% url 'submit_teacher_inquiry' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="teacher_id" id="askTeacherIdInput" value="">
+                    <input type="hidden" name="teacher_name" id="askTeacherNameInput" value="">
+                    <input type="hidden" name="subject" id="askTeacherSubjectInput" value="">
+
+                    <div class="modal-body p-4">
+                        <!-- Tanlangan ustoz va fan ko'rsatkichi -->
+                        <div class="p-3 bg-light rounded-3 border mb-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="small text-muted">Savol qabul qiluvchi ustoz:</div>
+                                <div class="fw-bold text-dark fs-6" id="askTeacherDisplayTeacher">Farrux Zohidov</div>
+                            </div>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1.5" id="askTeacherDisplaySubject">
+                                Futbol To'garagi
+                            </span>
+                        </div>
+
+                        <!-- 📊 O'quvchining Nechtadan Nechta Savol va Dars Ishlaganligi Ko'rsatkichi -->
+                        {% if user.is_authenticated %}
+                        <div class="p-3 mb-3 rounded-3 border d-flex align-items-center gap-3" style="background-color: #f0fdf4; border-color: #bbf7d0 !important;">
+                            <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                                <i class="fa-solid fa-chart-line fa-lg"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="small text-muted fw-semibold mb-1">
+                                    <i class="fa-solid fa-graduation-cap text-success me-1"></i> Sizning platformadagi faollik natijangiz:
+                                </div>
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 fw-bold" style="font-size: 0.82rem;">
+                                        📝 Savollar: {{ user.learning_stats.questions_display }} ta ishlangan
+                                    </span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1.5 fw-bold" style="font-size: 0.82rem;">
+                                        📚 Darslar: {{ user.learning_stats.lessons_display }} ta tugatilgan
+                                    </span>
+                                </div>
+                                <div class="text-secondary small mt-1" style="font-size: 0.78rem;">
+                                    O'rtacha ko'rsatkich: <b>{{ user.learning_stats.avg_score }}%</b> &bull; Hamyon: <b>{{ user.edu_coins }} 🪙 EduCoin</b>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-dark">Ism va Familiyangiz *</label>
+                            <input type="text" name="full_name" class="form-control rounded-3" 
+                                   value="{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% endif %}" 
+                                   placeholder="Ismingizni kiriting" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-dark">Bog'lanish uchun telefon raqam yoki Telegram *</label>
+                            <input type="text" name="phone_number" class="form-control rounded-3" 
+                                   value="{% if user.phone_number %}{{ user.phone_number }}{% endif %}" 
+                                   placeholder="+998 90 123-45-67 yoki @telegram_username" required>
+                            <div class="form-text small text-muted">Ustoz javobini sizga yetkazish uchun kerak bo'ladi.</div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-dark">Ustozga fan yuzasidan savolingiz *</label>
+                            <textarea name="question_text" class="form-control rounded-3" rows="4" 
+                                      placeholder="Ustozga o'z fani yuzasidan savolingiz, tushunmagan mavzuingiz yoki maslahat so'rovingizni yozing..." required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light border-0 p-3 d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Bekor qilish</button>
+                        <button type="submit" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm">
+                            <i class="fa-solid fa-paper-plane me-1"></i> Savolni Yuborish
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    {% block extra_js %}{% endblock %}
+
+    
+
+    <!-- Ustozlarga Savol Berish Funksiyalari -->
+    <script>
+    function openAskTeacherModal(teacherName, subject, emoji, teacherId) {
+        // Agar directory modal ochiq bo'lsa, uni yopamiz
+        const dirModalEl = document.getElementById('teacherQuestionsDirectoryModal');
+        if (dirModalEl) {
+            const dirModal = bootstrap.Modal.getInstance(dirModalEl);
+            if (dirModal) {
+                dirModal.hide();
+            }
+        }
+
+        // Savol modalidagi maydonlarni to'ldirish
+        const avatarEl = document.getElementById('askTeacherAvatarEmoji');
+        const titleEl = document.getElementById('askTeacherModalTitle');
+        const badgeEl = document.getElementById('askTeacherSubjectBadge');
+        const dispTeacherEl = document.getElementById('askTeacherDisplayTeacher');
+        const dispSubjEl = document.getElementById('askTeacherDisplaySubject');
+        const inputId = document.getElementById('askTeacherIdInput');
+        const inputName = document.getElementById('askTeacherNameInput');
+        const inputSubj = document.getElementById('askTeacherSubjectInput');
+
+        if (avatarEl) avatarEl.textContent = emoji || '👨‍🏫';
+        if (titleEl) titleEl.textContent = teacherName + ' ga savol berish';
+        if (badgeEl) badgeEl.textContent = 'Fan: ' + subject;
+        if (dispTeacherEl) dispTeacherEl.textContent = teacherName;
+        if (dispSubjEl) dispSubjEl.textContent = subject;
+        if (inputId) inputId.value = teacherId || '';
+        if (inputName) inputName.value = teacherName;
+        if (inputSubj) inputSubj.value = subject;
+
+        // Modalni ochish
+        const askModalEl = document.getElementById('askTeacherQuestionModal');
+        if (askModalEl) {
+            const askModal = bootstrap.Modal.getOrCreateInstance(askModalEl);
+            askModal.show();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Directory modal ichidagi toifalar bo'yicha filtr
+        const filterBtns = document.querySelectorAll('.filter-teacher-btn');
+        const cards = document.querySelectorAll('.teacher-card-item');
+        const searchInput = document.getElementById('teacherDirectorySearchInput');
+        const noMatchEl = document.getElementById('noTeacherCardsFound');
+
+        function applyFilters() {
+            const activeBtn = document.querySelector('.filter-teacher-btn.active');
+            const category = activeBtn ? activeBtn.getAttribute('data-category') : 'all';
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            let visibleCount = 0;
+            cards.forEach(card => {
+                const cardCat = card.getAttribute('data-category');
+                const cardName = (card.getAttribute('data-name') || '').toLowerCase();
+                const cardSubj = (card.getAttribute('data-subject') || '').toLowerCase();
+
+                const catMatch = (category === 'all' || cardCat === category);
+                const textMatch = (!query || cardName.includes(query) || cardSubj.includes(query));
+
+                if (catMatch && textMatch) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (noMatchEl) {
+                noMatchEl.classList.toggle('d-none', visibleCount > 0);
+            }
+        }
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterBtns.forEach(b => {
+                    b.classList.remove('active', 'btn-dark');
+                    b.classList.add('btn-outline-secondary');
+                });
+                this.classList.add('active', 'btn-dark');
+                this.classList.remove('btn-outline-secondary');
+                applyFilters();
+            });
+        });
+
+        if (searchInput) {
+            searchInput.addEventListener('input', applyFilters);
+        }
+    });
+    </script>
+
+        {% block extra_js %}{% endblock %}
 </body>
 </html>

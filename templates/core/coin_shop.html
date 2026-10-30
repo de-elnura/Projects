@@ -174,12 +174,17 @@
                 <div class="d-flex flex-wrap align-items-center gap-3">
                     {% if can_claim_streak %}
                         <a href="{% url 'claim_daily_bonus' %}" class="btn btn-warning btn-lg fw-bold pulse-glow px-4 py-2.5 shadow">
-                            <i class="fa-solid fa-fire me-2"></i> Kunlik Bonusni Olish (+15 🪙)
+                            <i class="fa-solid fa-fire me-2"></i> Kunlik Bonusni Olish (+{{ next_streak_reward|default:15 }} 🪙)
                         </a>
                     {% else %}
                         <button class="btn btn-light disabled px-4 py-2.5 fw-bold text-success border-0 shadow-sm" disabled>
                             <i class="fa-solid fa-circle-check me-2 text-success"></i> Bugungi Kunlik Bonus Olingan ✅
                         </button>
+                    {% endif %}
+                    {% if streak_days > 0 %}
+                        <span class="badge bg-danger text-white px-3 py-2.5 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center">
+                            <i class="fa-solid fa-fire-flame-curved me-1 text-warning"></i> {{ streak_days }} kunlik Streak!
+                        </span>
                     {% endif %}
                     <a href="#quests-section" class="btn btn-outline-light px-4 py-2.5 fw-semibold">
                         <i class="fa-solid fa-list-check me-1"></i> 8 xil Kvestlar

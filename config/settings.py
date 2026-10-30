@@ -81,3 +81,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'course_list'
 LOGOUT_REDIRECT_URL = 'course_list'
+
+# Session & Cookie Security
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Telegram Bot Integratsiyasi
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '8782529663:AAFkI3rpqIRJc9dQMbrxb7pnrLWpqPodTtY')
+TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID', '7683183690')

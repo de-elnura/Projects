@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Mening Maoshim va To'garaklarim — SkillUp Ustoz Kabineti{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5">
+    
+    <!-- Hero / Ustoz Shaxsiy Maosh Banneri -->
+    <div class="rounded-4 p-4 p-md-5 mb-4 shadow-sm text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-3 shadow-xs">
+                    <i class="fa-solid fa-chalkboard-user me-1"></i> O'qituvchi Shaxsiy Kabineti
+                </span>
+                <h1 class="display-6 fw-extrabold mb-2 text-white">{{ teacher.get_full_name|default:teacher.username }}</h1>
+                <p class="lead fs-6 text-light opacity-90 mb-4" style="max-width: 600px;">
+                    Sizning to'garaklaringiz, guruhlaringiz va belgilangan oylik maoshingiz haqidagi shaxsiy ma'lumotlar.
+                </p>
+
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <a href="{% url 'timetable' %}" class="btn btn-warning btn-sm fw-bold px-3.5 py-2 rounded-pill shadow-xs">
+                        <i class="fa-solid fa-calendar-days me-1"></i> Dars Jadvalim
+                    </a>
+                    <a href="{% url 'attendance' %}" class="btn btn-outline-light btn-sm fw-semibold px-3.5 py-2 rounded-pill">
+                        <i class="fa-solid fa-clipboard-user me-1"></i> Davomat Olish
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-4 text-center d-none d-lg-block">
+                <div class="p-4 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-20 backdrop-blur">
+                    <div class="small text-uppercase tracking-wider text-warning fw-bold mb-1">Oylik Maoshingiz</div>
+                    <div class="display-6 fw-extrabold text-white mb-1">{{ teacher.get_salary_display }}</div>
+                    <small class="text-light opacity-80"><i class="fa-solid fa-shield-halved me-1"></i> Maxfiy shaxsiy hisob-kitob</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- O'qituvchi KPI & Shaxsiy Ko'rsatkichlar -->
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-xs rounded-4 p-3 bg-white text-center h-100">
+                <div class="fs-2 fw-extrabold text-primary mb-1">{{ teacher.get_salary_display }}</div>
+                <div class="small fw-bold text-dark"><i class="fa-solid fa-wallet text-primary me-1"></i> Belgilangan Maosh</div>
+                <small class="text-muted" style="font-size: 0.72rem;">Har oylik kafolatlangan</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-xs rounded-4 p-3 bg-white text-center h-100">
+                <div class="fs-2 fw-extrabold text-success mb-1">{{ my_courses.count }} ta</div>
+                <div class="small fw-bold text-dark"><i class="fa-solid fa-shapes text-success me-1"></i> Mening To'garaklarim</div>
+                <small class="text-muted" style="font-size: 0.72rem;">Siz o'tadigan fanlar</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-xs rounded-4 p-3 bg-white text-center h-100">
+                <div class="fs-2 fw-extrabold text-warning mb-1">{{ my_groups.count }} ta</div>
+                <div class="small fw-bold text-dark"><i class="fa-solid fa-users text-warning me-1"></i> Faol Guruhlarim</div>
+                <small class="text-muted" style="font-size: 0.72rem;">Hozir o'qiyotgan guruhlar</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-xs rounded-4 p-3 bg-white text-center h-100">
+                <div class="fs-2 fw-extrabold text-info mb-1">{{ total_students_count }} nafar</div>
+                <div class="small fw-bold text-dark"><i class="fa-solid fa-user-graduate text-info me-1"></i> O'quvchilarim</div>
+                <small class="text-muted" style="font-size: 0.72rem;">Jami tahsil oluvchilar</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mening To'garaklarim Ro'yxati -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-graduation-cap text-primary me-2"></i> Siz Dars Beradigan To'garaklar</h4>
+        <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5 fw-bold">{{ my_courses.count }} ta to'garak</span>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+        {% for course in my_courses %}
+            <div class="col">
+                <div class="card border-0 shadow-xs rounded-4 overflow-hidden h-100 bg-white">
+                    <div style="height: 180px; overflow: hidden; position: relative;">
+                        <img src="{{ course.thumbnail_url|default:'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600' }}" 
+                             alt="{{ course.title }}" 
+                             class="w-100 h-100 object-fit-cover">
+                        <span class="badge bg-primary position-absolute top-0 start-0 m-3 px-2.5 py-1 rounded-pill fw-bold shadow-xs">
+                            {{ course.category }}
+                        </span>
+                    </div>
+                    <div class="p-3.5 d-flex flex-column justify-content-between flex-grow-1">
+                        <div>
+                            <h6 class="fw-bold text-dark mb-2" style="line-height: 1.4;">{{ course.title }}</h6>
+                            <div class="small text-muted mb-3">
+                                <i class="fa-regular fa-clock text-primary me-1"></i> {{ course.get_schedule_display_full }}
+                            </div>
+                        </div>
+                        <div class="pt-2.5 border-top d-flex justify-content-between align-items-center">
+                            <span class="small fw-bold text-success"><i class="fa-solid fa-circle-check me-1"></i> Faol mashg'ulot</span>
+                            <a href="{% url 'course_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Ko'rish</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="fa-solid fa-shapes fa-3x mb-3 text-secondary"></i>
+                <h6>Sizga biriktirilgan to'garaklar mavjud emas</h6>
+                <p class="small">Administrator bilan bog'lanib to'garaklarni biriktiring.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

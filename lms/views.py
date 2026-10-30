@@ -381,9 +381,14 @@ def profile_view(request):
     })
 
 
+@login_required
 def certificate_view(request, certificate_id):
     # UUID yoki unikal id bo'yicha topish
     cert = get_object_or_404(Certificate.objects.select_related('student', 'course__instructor'), certificate_id=certificate_id)
+    if cert.student != request.user:
+        messages.error(request, "Xavfsizlik: Begona foydalanuvchining sertifikatini ko'rish mutlaqo taqiqlangan!")
+        return redirect('profile')
+
     return render(request, 'lms/certificate.html', {
         'cert': cert,
     })

@@ -170,14 +170,29 @@
                             </td>
                             <td>
                                 {% if item.has_danger_alert %}
-                                    <span class="badge bg-danger rounded-pill px-3 py-1.5 danger-alert-badge shadow-sm">
+                                    <span class="badge bg-danger rounded-pill px-2.5 py-1 danger-alert-badge shadow-sm mb-1 d-inline-block">
                                         <i class="fa-solid fa-triangle-exclamation"></i> 3 kun ketma-ket qoldirdi!
                                     </span>
                                 {% else %}
-                                    <span class="badge bg-light text-success border">
-                                        <i class="fa-solid fa-circle-check"></i> Muntazam qatnashuvchi
+                                    <span class="badge bg-light text-success border rounded-pill px-2.5 py-1 mb-1 d-inline-block">
+                                        <i class="fa-solid fa-circle-check"></i> Muntazam
                                     </span>
                                 {% endif %}
+                                <div>
+                                    {% if item.payment_status == 'paid' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 small">
+                                            <i class="fa-solid fa-coins me-1"></i> To'langan ({{ item.paid_amount|floatformat:0 }} so'm)
+                                        </span>
+                                    {% elif item.payment_status == 'partial' %}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 small">
+                                            <i class="fa-solid fa-circle-half-stroke me-1"></i> Qisman ({{ item.paid_amount|floatformat:0 }} so'm)
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-0.5 small">
+                                            <i class="fa-solid fa-circle-exclamation me-1"></i> Qarzdor
+                                        </span>
+                                    {% endif %}
+                                </div>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">

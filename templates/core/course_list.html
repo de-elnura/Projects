@@ -1,10 +1,282 @@
 {% extends 'base.html' %}
 
-{% block title %}Barcha To'garaklar va Kurslar — SkillUp{% endblock %}
+{% block title %}Barcha To'garaklar va Zamonaviy Kasblar — SkillUp{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* 1 QATORLI IXCHAM KURS QATORI (Compact 1-Line Row) */
+    /* ========================================================================= */
+    /* 🌟 MOHIRDEV USLUBIDAGI ZAMONAVIY VA TOZA KURS KARTALARI                  */
+    /* ========================================================================= */
+    .mohir-card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        overflow: hidden;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        position: relative;
+    }
+
+    .mohir-card:hover {
+        border-color: #4f46e5;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.15);
+        background: #ffffff !important;
+        transform: none !important;
+    }
+
+    /* To'rtburchak Rasm (16:9 nisbat) */
+    .mohir-thumb-wrap {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        overflow: hidden;
+        background-color: #f1f5f9;
+    }
+
+    .mohir-thumb-img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+        filter: none !important;
+    }
+
+    /* Sichqoncha borganda oqarib ketmasligi uchun transform va filtrlar butunlay o'chirildi */
+    .mohir-card:hover .mohir-thumb-img {
+        transform: none !important;
+        opacity: 1 !important;
+        filter: none !important;
+    }
+
+    /* ========================================================================= */
+    /* 🚀 INNOVATSION HERO SLAYDERI                                             */
+    /* ========================================================================= */
+    .hero-slider-wrap {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        aspect-ratio: 16 / 10;
+        box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.45);
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        background: #0f172a;
+    }
+
+    .hero-slide {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 0.8s ease-in-out, transform 0.8s ease;
+        transform: scale(1.04);
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 1.25rem;
+    }
+
+    .hero-slide.active {
+        opacity: 1;
+        transform: scale(1);
+        z-index: 2;
+    }
+
+    .hero-slide-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.35) 60%, transparent 100%);
+    }
+
+    .hero-slide-content {
+        position: relative;
+        z-index: 3;
+    }
+
+    .slider-dots {
+        position: absolute;
+        bottom: 10px;
+        right: 12px;
+        z-index: 4;
+        display: flex;
+        gap: 6px;
+    }
+
+    .slider-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .slider-dot.active {
+        width: 22px;
+        border-radius: 9999px;
+        background: #f59e0b;
+    }
+
+    /* ========================================================================= */
+    /* ⚡ ULTRA PRO MAX STATISTIKA KARTALARI                                    */
+    /* ========================================================================= */
+    .ultra-stat-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 1.25rem 1rem;
+        text-align: center;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        cursor: pointer;
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    }
+
+    .ultra-stat-card::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: transparent;
+        transition: background-color 0.25s ease;
+    }
+
+    .ultra-stat-card.stat-primary::after { background: #4f46e5; }
+    .ultra-stat-card.stat-success::after { background: #10b981; }
+    .ultra-stat-card.stat-warning::after { background: #f59e0b; }
+    .ultra-stat-card.stat-info::after { background: #06b6d4; }
+
+    .ultra-stat-card:hover {
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.12);
+        border-color: #cbd5e1;
+    }
+
+    .ultra-stat-card:hover .stat-indicator {
+        opacity: 1;
+        transform: translateX(2px);
+    }
+
+    .stat-indicator {
+        font-size: 0.72rem;
+        font-weight: 700;
+        opacity: 0.6;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-top: 0.35rem;
+    }
+
+
+
+    /* FILTR TUGMALARI (OQARIB MILTILLAMAYDI, SILIQ VA TOZA) */
+    .filter-pill {
+        border-radius: 9999px;
+        padding: 0.42rem 1.15rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        background-color: #ffffff;
+        color: #334155;
+        transition: all 0.15s ease-in-out;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        user-select: none;
+        outline: none;
+    }
+
+    .filter-pill:hover {
+        background-color: #f1f5f9;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
+
+    .filter-pill.active {
+        background-color: #4f46e5 !important;
+        color: #ffffff !important;
+        border-color: #4f46e5 !important;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    .schedule-pill {
+        border-radius: 9999px;
+        padding: 0.32rem 0.9rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        background-color: #ffffff;
+        color: #475569;
+        transition: all 0.15s ease-in-out;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        user-select: none;
+        outline: none;
+    }
+
+    .schedule-pill:hover {
+        background-color: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .schedule-pill.active {
+        background-color: #0f172a !important;
+        color: #ffffff !important;
+        border-color: #0f172a !important;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+    }
+
+    /* Modal Banner va Oyna Dizayni */
+    .course-modal-banner {
+        position: relative;
+        height: 220px;
+        background-size: cover;
+        background-position: center;
+        border-radius: 18px 18px 0 0;
+        overflow: hidden;
+    }
+    
+    .course-modal-banner-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(15, 23, 42, 0.94) 0%, rgba(15, 23, 42, 0.35) 100%);
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .drop-shadow-title {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+
+    .view-switch-btn {
+        border-radius: 9999px;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.82rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    /* Ixcham qator ko'rinishi (agar foydalanuvchi almashtirsa) */
     .course-compact-row {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -17,170 +289,220 @@
         justify-content: space-between;
         gap: 1rem;
         margin-bottom: 0.65rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     }
 
     .course-compact-row:hover {
         transform: translateX(4px);
-        border-color: #f59e0b;
-        box-shadow: 0 8px 18px rgba(245, 158, 11, 0.12);
-        background: #fffdfa;
+        border-color: #4f46e5;
+        box-shadow: 0 8px 18px rgba(79, 70, 229, 0.1);
+        background: #fafafa;
     }
 
     .course-mini-thumb {
-        width: 48px;
-        height: 48px;
+        width: 50px;
+        height: 50px;
         border-radius: 12px;
         object-fit: cover;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        border: 2px solid #fef3c7;
         flex-shrink: 0;
-    }
-
-    .course-teacher-avatar-mini {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 1.5px solid #cbd5e1;
-        flex-shrink: 0;
-    }
-
-    /* MODAL STYLES */
-    .course-modal-banner {
-        position: relative;
-        height: 200px;
-        background-size: cover;
-        background-position: center;
-        border-radius: 18px 18px 0 0;
-        overflow: hidden;
-    }
-    
-    .course-modal-banner-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.35) 100%);
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-    }
-
-    .drop-shadow-title {
-        text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-    }
-
-    .view-switch-btn {
-        border-radius: 9999px;
-        padding: 0.35rem 0.85rem;
-        font-size: 0.82rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
-        border: none;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-4 py-lg-5">
     
-    <!-- Hero / Banner -->
-    <div class="row align-items-center mb-4 p-4 p-md-5 rounded-4 shadow-sm" style="background: linear-gradient(135deg, #0f172a, #312e81, #4338ca); color: white;">
-        <div class="col-lg-8">
-            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3 shadow-sm">
-                <i class="fa-solid fa-sparkles me-1"></i> Xush kelibsiz, Aziz O'quvchilar va Hurmatli Ota-onalar!
-            </span>
-            <h1 class="display-5 fw-extrabold mb-3 text-white">Kelajak Kasblari, Fanlar, Tillar va Sport To'garaklari!</h1>
-            <p class="lead text-light mb-4 opacity-90">
-                Savodxonlik, Dasturlash, Backend, Frontend, Ingliz tili, CEFR, IELTS, Koreys, Rus, Xitoy, Turk, Ona tili, Adabiyot (Milliy Sertifikat), Matematika, Shaxmat/Shashka musobaqalari, Hafta oxiri Futboli va Ping-pong to'garaklariga a'zo bo'ling!
-            </p>
-
-            <!-- Qidiruv Qutisi -->
-            <form method="GET" action="{% url 'course_list' %}" class="d-flex gap-2 max-w-lg mb-2">
-                <div class="input-group shadow-sm">
-                    <span class="input-group-text bg-white border-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                    <input type="text" name="q" value="{{ query }}" class="form-control border-0 py-2.5" placeholder="To'garak nomi, o'qituvchi yoki fan nomini qidiring...">
-                    <button class="btn btn-warning fw-bold px-4" type="submit">Qidirish</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="col-lg-4 text-center d-none d-lg-block">
-            <div class="p-4 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-20 backdrop-blur">
-                <div class="fs-1 mb-2">🎓 ⚽ ♟️ 💻</div>
-                <div class="fs-5 fw-bold text-white">SkillUp To'garaklar Markazi</div>
-                <small class="text-light opacity-75">17 xil yo'nalish &bull; Ertadan online boshlanadi</small>
-            </div>
-        </div>
-    </div>
-
-    <!-- PAKET CHEGIRMASI PROMO BANNERI -->
-    <div class="card border-0 rounded-4 p-4 mb-5 text-white shadow-sm" style="background: linear-gradient(135deg, #3730a3, #4f46e5); border-left: 8px solid #f59e0b !important;">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-            <div>
-                <span class="badge bg-warning text-dark fw-bold px-3 py-1 rounded-pill mb-1">🎁 Maxsus Paket Taklifi</span>
-                <h4 class="fw-bold mb-1 text-white">2 ta to'garakka borsangiz — 50 000 so'm, 3 tasiga esa — 100 000 so'm chegirma!</h4>
-                <p class="mb-0 text-light opacity-90 small">
-                    To'garak kunlari: toq kunlari, juft kunlari va dam olish kunlari online o'tkaziladi. Hoziroq to'lov qilib ertadan mashg'ulotni boshlang!
+    <!-- =================================================================== -->
+    <!-- 1. MOHIRDEV USLUBIDAGI TOZA VA IXCHAM HERO BANNER                    -->
+    <!-- =================================================================== -->
+    <div class="rounded-4 p-4 p-md-5 mb-4 shadow-sm text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #312e81 100%);">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill fw-bold mb-3 shadow-xs">
+                    <i class="fa-solid fa-graduation-cap me-1"></i> Aziz O'quvchilar va Hurmatli Ota-onalar Uchun
+                </span>
+                <h1 class="display-6 fw-extrabold mb-2 text-white">Kelajak Kasblari va To'garaklar</h1>
+                <p class="lead fs-6 text-light opacity-90 mb-4" style="max-width: 650px;">
+                    Dasturlash, xorijiy tillar, aniq fanlar va sport yo'nalishlarida tajribali murabbiylar bilan darslarni boshlang. To'garaklar dushanba-juma va dam olish kunlari qulay jadvallarda olib boriladi.
                 </p>
+                
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <button type="button" class="btn btn-warning btn-sm fw-bold px-3.5 py-2 rounded-pill shadow-xs" data-bs-toggle="modal" data-bs-target="#globalDiscountsModal">
+                        <i class="fa-solid fa-tags me-1"></i> Paket Chegirmalari (2+ to'garak)
+                    </button>
+                    {% if user.is_authenticated and user.is_staff %}
+                    <a href="{% url 'statistics' %}" class="btn btn-outline-light btn-sm fw-semibold px-3.5 py-2 rounded-pill">
+                        <i class="fa-solid fa-chart-pie me-1"></i> Markaz Statistikasi
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-4 d-none d-lg-block">
+                <!-- 🚀 INNOVATSION DINAMIK HERO SLAYDERI -->
+                <div class="hero-slider-wrap" id="heroInnovSlider">
+                    <!-- Slayd 1: Sun'iy Intellekt va Robototexnika -->
+                    <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=700');">
+                        <div class="hero-slide-overlay"></div>
+                        <div class="hero-slide-content">
+                            <span class="badge bg-danger text-white fw-bold px-2.5 py-1 rounded-pill mb-1.5 shadow-xs" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-robot me-1"></i> Sun'iy Intellekt & IT
+                            </span>
+                            <h5 class="fw-extrabold text-white mb-0 drop-shadow-title fs-5">Python & Kiberxavfsizlik</h5>
+                            <small class="text-light opacity-85">Kelajak kasblari va algoritmlar</small>
+                        </div>
+                    </div>
+
+                    <!-- Slayd 2: Xalqaro Tillar va Diplomatiya -->
+                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=700');">
+                        <div class="hero-slide-overlay"></div>
+                        <div class="hero-slide-content">
+                            <span class="badge bg-primary text-white fw-bold px-2.5 py-1 rounded-pill mb-1.5 shadow-xs" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-earth-americas me-1"></i> Global Tillar
+                            </span>
+                            <h5 class="fw-extrabold text-white mb-0 drop-shadow-title fs-5">IELTS, Rus & Sharq Tillari</h5>
+                            <small class="text-light opacity-85">Xorijda ta'lim va erkin so'zlashuv</small>
+                        </div>
+                    </div>
+
+                    <!-- Slayd 3: Aniq Fanlar va Matematika -->
+                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=700');">
+                        <div class="hero-slide-overlay"></div>
+                        <div class="hero-slide-content">
+                            <span class="badge bg-warning text-dark fw-bold px-2.5 py-1 rounded-pill mb-1.5 shadow-xs" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-atom me-1"></i> Aniq Fanlar
+                            </span>
+                            <h5 class="fw-extrabold text-white mb-0 drop-shadow-title fs-5">Matematika & Fizika</h5>
+                            <small class="text-light opacity-85">Olimpiadalar va DTM 100% natija</small>
+                        </div>
+                    </div>
+
+                    <!-- Slayd 4: Shaxmat & Strategik Sport -->
+                    <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1529699211952-734e80c4d42b?w=700');">
+                        <div class="hero-slide-overlay"></div>
+                        <div class="hero-slide-content">
+                            <span class="badge bg-success text-white fw-bold px-2.5 py-1 rounded-pill mb-1.5 shadow-xs" style="font-size: 0.72rem;">
+                                <i class="fa-solid fa-chess-knight me-1"></i> Intellekt & Sport
+                            </span>
+                            <h5 class="fw-extrabold text-white mb-0 drop-shadow-title fs-5">Shaxmat & Stol Tennisi</h5>
+                            <small class="text-light opacity-85">Strategik fikrlash va chempionatlar</small>
+                        </div>
+                    </div>
+
+                    <!-- Indikator Nuqtalar -->
+                    <div class="slider-dots" id="heroSliderDots">
+                        <span class="slider-dot active" onclick="jumpToHeroSlide(0)"></span>
+                        <span class="slider-dot" onclick="jumpToHeroSlide(1)"></span>
+                        <span class="slider-dot" onclick="jumpToHeroSlide(2)"></span>
+                        <span class="slider-dot" onclick="jumpToHeroSlide(3)"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 2. IXCHAM CHEGIRMALAR BILDIRISHNOMASI (XALQIT BERMAYDIGAN)          -->
+    <!-- =================================================================== -->
+    <div class="card border-0 rounded-4 p-3 p-md-3.5 mb-4 shadow-xs" style="background: linear-gradient(90deg, #eff6ff, #fdf2f8); border-left: 6px solid #4f46e5 !important;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="fs-2 text-primary">🎁</div>
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark">
+                        Maxsus Paket Chegirmasi: 2 ta to'garakka — 50 000 so'm, 3 tasiga esa — 100 000 so'm chegirma!
+                    </h6>
+                    <small class="text-muted">
+                        Farzandingiz uchun bir vaqtning o'zida ham til, ham kasb yoki fan to'garaklarini tanlab har oylik to'lovda tejang.
+                    </small>
+                </div>
             </div>
             <div>
-                <a href="{% url 'bundle_enroll' %}" class="btn btn-warning fw-bold px-4 py-2.5 shadow">
-                    <i class="fa-solid fa-layer-group me-1"></i> Paket Tanlash & Chegirma Olish &rarr;
-                </a>
+                <button type="button" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3.5 py-2 shadow-xs" data-bs-toggle="modal" data-bs-target="#globalDiscountsModal">
+                    <i class="fa-solid fa-percent me-1"></i> Chegirmalarni Ko'rish
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Platforma Statistikasi Kartochkalari -->
-    <div class="row g-3 mb-5">
+    <!-- =================================================================== -->
+    <!-- 3. ⚡ ULTRA PRO MAX PLATFORMA STATISTIKASI (FAQAT ADMINGA KO'RINADI) -->
+    <!-- =================================================================== -->
+    {% if user.is_authenticated and user.is_staff %}
+    <div class="row g-3 mb-4">
+        <!-- 1. Barcha to'garaklar (Bosilganda to'garaklar ro'yxatiga silliq olib boradi) -->
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 text-center bg-white">
-                <div class="fs-3 fw-bold text-primary">{{ stats.total_courses }} ta</div>
-                <div class="text-muted small"><i class="fa-solid fa-shapes me-1"></i> Barcha To'garaklar</div>
-            </div>
+            <a href="#coursesGridView" onclick="applyInstantCategory('Barchasi', document.querySelector('.filter-pill'));" class="ultra-stat-card stat-primary">
+                <div class="fs-2 fw-extrabold text-primary mb-1">{{ stats.total_courses }} ta</div>
+                <div class="fw-bold text-dark small"><i class="fa-solid fa-shapes text-primary me-1"></i> Barcha To'garaklar</div>
+                <div class="stat-indicator text-primary">
+                    <span>Kurslarni Ko'rish</span> <i class="fa-solid fa-arrow-down"></i>
+                </div>
+            </a>
         </div>
+
+        <!-- 2. Katta Murabbiylar (Bosilganda Ustozlar ro'yxatiga o'tadi) -->
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 text-center bg-white">
-                <div class="fs-3 fw-bold text-success">{{ stats.total_teachers }} nafar</div>
-                <div class="text-muted small"><i class="fa-solid fa-user-tie me-1"></i> Katta Murabbiylar</div>
-            </div>
+            <a href="{% url 'teachers_list' %}" class="ultra-stat-card stat-success" title="Barcha katta murabbiylar, oyligi va profillarini ko'rish">
+                <div class="fs-2 fw-extrabold text-success mb-1">{{ stats.total_teachers }} nafar</div>
+                <div class="fw-bold text-dark small"><i class="fa-solid fa-user-tie text-success me-1"></i> Katta Murabbiylar</div>
+                <div class="stat-indicator text-success">
+                    <span>Ustozlar Ro'yxati</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </div>
+            </a>
         </div>
+
+        <!-- 3. Darslar & Mashqlar (Bosilganda Statistika tahliliga o'tadi) -->
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 text-center bg-white">
-                <div class="fs-3 fw-bold text-warning">{{ stats.total_lessons }}+</div>
-                <div class="text-muted small"><i class="fa-solid fa-play-circle me-1"></i> Darslar & Mashqlar</div>
-            </div>
+            <a href="{% url 'statistics' %}" class="ultra-stat-card stat-warning" title="Platforma umumiy tahlili va darslar statistikasini ko'rish">
+                <div class="fs-2 fw-extrabold text-warning mb-1">{{ stats.total_lessons }}+</div>
+                <div class="fw-bold text-dark small"><i class="fa-solid fa-play-circle text-warning me-1"></i> Darslar & Mashqlar</div>
+                <div class="stat-indicator text-warning">
+                    <span>Darslar Tahlili</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </div>
+            </a>
         </div>
+
+        <!-- 4. Berilgan Sertifikatlar (Bosilganda Sertifikatlar statistikasiga o'tadi) -->
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 text-center bg-white">
-                <div class="fs-3 fw-bold text-info">{{ stats.total_certificates }} ta</div>
-                <div class="text-muted small"><i class="fa-solid fa-award me-1"></i> Berilgan Sertifikatlar</div>
-            </div>
+            <a href="{% url 'statistics' %}" class="ultra-stat-card stat-info" title="Berilgan rasmiy sertifikatlar va talabalar reytingini ko'rish">
+                <div class="fs-2 fw-extrabold text-info mb-1">{{ stats.total_certificates }} ta</div>
+                <div class="fw-bold text-dark small"><i class="fa-solid fa-award text-info me-1"></i> Berilgan Sertifikatlar</div>
+                <div class="stat-indicator text-info">
+                    <span>Natijalarni Ko'rish</span> <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </div>
+            </a>
         </div>
     </div>
+    {% endif %}
 
-    <!-- Kategoriyalar va Kunlar Bo'yicha Filtrlar -->
+    <!-- =================================================================== -->
+    <!-- 4. KATEGORIYALAR VA KUNLAR BO'YICHA FILTRLAR                        -->
+    <!-- =================================================================== -->
     <div class="mb-4">
-        <!-- Sohalar filtri -->
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <!-- Sohalar filtri (Instant, Oqarib Qolmaydi) -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2.5">
             <span class="small fw-bold text-muted me-2"><i class="fa-solid fa-filter me-1"></i> Yo'nalish:</span>
             {% for cat in categories %}
-                <a href="{% url 'course_list' %}?category={% if cat != 'Barchasi' %}{{ cat }}{% endif %}{% if selected_schedule %}&schedule={{ selected_schedule }}{% endif %}{% if query %}&q={{ query }}{% endif %}" 
-                   class="btn btn-sm {% if selected_category == cat or not selected_category and cat == 'Barchasi' %}btn-primary-custom shadow-sm{% else %}btn-outline-secondary bg-white{% endif %} rounded-pill px-3 py-1.5 fw-semibold">
+                <button type="button" 
+                        class="filter-pill {% if selected_category == cat or not selected_category and cat == 'Barchasi' %}active{% endif %}"
+                        data-cat-name="{{ cat }}"
+                        onclick="applyInstantCategory('{{ cat }}', this)">
                     {{ cat }}
-                </a>
+                </button>
             {% endfor %}
         </div>
 
-        <!-- Kunlar jadvali filtri -->
+        <!-- Kunlar jadvali filtri (Instant, Oqarib Qolmaydi) -->
         <div class="d-flex flex-wrap align-items-center gap-2 pb-3 border-bottom">
-            <span class="small fw-bold text-muted me-2"><i class="fa-regular fa-calendar-days me-1"></i> Kunlar:</span>
+            <span class="small fw-bold text-muted me-2"><i class="fa-regular fa-calendar-days me-1"></i> Dars kunlari:</span>
             {% for code, label in schedules %}
-                <a href="{% url 'course_list' %}?schedule={% if code != 'Barchasi' %}{{ code }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if query %}&q={{ query }}{% endif %}" 
-                   class="btn btn-sm {% if selected_schedule == code or not selected_schedule and code == 'Barchasi' %}btn-dark shadow-sm{% else %}btn-light border{% endif %} rounded-pill px-3 py-1 small fw-semibold">
+                <button type="button" 
+                        class="schedule-pill {% if selected_schedule == code or not selected_schedule and code == 'Barchasi' %}active{% endif %}"
+                        data-sched-code="{{ code }}"
+                        onclick="applyInstantSchedule('{{ code }}', this)">
                     {{ label }}
-                </a>
+                </button>
             {% endfor %}
         </div>
     </div>
@@ -188,407 +510,404 @@
     <!-- Kurslar Ro'yxati Sarlavhasi & Ko'rinish Tanlagich -->
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-            <h3 class="fw-bold mb-1 text-dark">
-                {% if selected_category and selected_category != 'Barchasi' %}{{ selected_category }}{% else %}Barcha Mavjud To'garaklar{% endif %}
+            <h3 class="fw-bold mb-1 text-dark" id="catalogHeading">
+                {% if selected_category and selected_category != 'Barchasi' %}{{ selected_category }}{% else %}Barcha Mavjud Kurslar va To'garaklar{% endif %}
             </h3>
             <p class="text-muted mb-0 small">
-                Har qanday to'garak ustiga bosing — to'liq dars jadvali, ustoz maoshi, sharhlar va qatnashish oynasi ochiladi!
+                Har qanday kurs ustiga bosing — to'liq dars jadvali, murabbiy ma'lumoti va qatnashish oynasi ochiladi!
             </p>
         </div>
         
         <div class="d-flex align-items-center gap-2">
-            <!-- Ko'rinish tanlagich (1-Line vs Grid) -->
+            <!-- Ko'rinish tanlagich (Mohirdev Kataklar vs 1-Line) -->
             <div class="btn-group p-1 bg-white rounded-pill border shadow-xs">
-                <button id="viewListBtn" class="view-switch-btn btn-dark" onclick="switchCourseView('list')">
-                    <i class="fa-solid fa-bars me-1"></i> 1 Qatorli (Ixcham)
-                </button>
-                <button id="viewGridBtn" class="view-switch-btn btn-light text-muted" onclick="switchCourseView('grid')">
+                <button id="viewGridBtn" class="view-switch-btn btn-dark" onclick="switchCourseView('grid')">
                     <i class="fa-solid fa-grip me-1"></i> Kataklar
                 </button>
-            </div>
-
-            <a href="{% url 'bundle_enroll' %}" class="btn btn-outline-primary btn-sm fw-bold rounded-pill px-3 py-1.5">
-                <i class="fa-solid fa-layer-group me-1"></i> Paket (-50k / -100k)
-            </a>
-        </div>
-    </div>
-
-    <!-- =================================================================== -->
-    <!-- 📋 1 QATORLI (1 YO'LLI) IXCHAM TO'GARAKLAR RO'YXATI (DEFAULT)      -->
-    <!-- =================================================================== -->
-    <div id="coursesCompactView" class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-5">
-        <div class="d-flex justify-content-between align-items-center px-2 py-2 mb-2 border-bottom text-muted small fw-bold text-uppercase">
-            <span style="width: 38%;">To'garak & Yo'nalish</span>
-            <span class="d-none d-md-inline" style="width: 22%;">Dars Jadvali & Boshlanish</span>
-            <span class="d-none d-lg-inline" style="width: 20%;">Katta Murabbiy</span>
-            <span style="width: 12%; text-align: right;">To'garak Narxi</span>
-            <span style="width: 8%; text-align: right;">Batafsil</span>
-        </div>
-
-        {% for item in courses_data %}
-        <!-- 1 QATORLI IXCHAM KURS -->
-        <div class="course-compact-row" data-bs-toggle="modal" data-bs-target="#courseModal{{ item.course.id }}">
-            
-            <!-- 1-blok: Mini Rasm, Nomi & Kategoriya -->
-            <div class="d-flex align-items-center gap-3" style="width: 38%; min-width: 230px;">
-                <img src="{{ item.course.thumbnail_url|default:'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=500' }}" 
-                     alt="{{ item.course.title }}" 
-                     class="course-mini-thumb">
-                <div class="overflow-hidden">
-                    <div class="fw-bold text-dark text-truncate d-flex align-items-center gap-1.5" title="{{ item.course.title }}">
-                        <span class="text-truncate">{{ item.course.title }}</span>
-                        {% if item.course.is_modern_profession %}
-                            <span class="badge bg-warning text-dark px-1.5 py-0.5 rounded-pill shadow-xs" style="font-size: 0.65rem;" title="Zamonaviy Qimmat Kasb">
-                                <i class="fa-solid fa-bolt"></i>
-                            </span>
-                        {% endif %}
-                    </div>
-                    <div class="small text-muted text-truncate" style="font-size: 0.78rem;">
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0.5" style="font-size: 0.68rem;">
-                            {{ item.course.category }}
-                        </span>
-                        &bull; <i class="fa-solid fa-circle-play text-info"></i> {{ item.total_lessons }} ta dars
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2-blok: Kunlar va Vaqti -->
-            <div class="d-none d-md-block" style="width: 22%;">
-                <div class="small fw-semibold text-dark text-truncate" title="{{ item.course.get_schedule_display_full }}">
-                    <i class="fa-regular fa-clock text-primary me-1"></i> {{ item.course.get_schedule_display_full }}
-                </div>
-                <div class="text-success small fw-semibold" style="font-size: 0.75rem;">
-                    <i class="fa-solid fa-calendar-check me-1"></i> Ertadan boshlanadi
-                </div>
-            </div>
-
-            <!-- 3-blok: Ustoz va Oyligi -->
-            <div class="d-none d-lg-block" style="width: 20%;">
-                <div class="d-flex align-items-center gap-2">
-                    <img src="{{ item.course.author.avatar_url|default:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500' }}" 
-                         alt="{{ item.course.author.get_full_name }}" 
-                         class="course-teacher-avatar-mini">
-                    <div class="overflow-hidden">
-                        <div class="fw-bold text-dark text-truncate small">{{ item.course.author.get_full_name }}</div>
-                        <div class="text-muted text-truncate" style="font-size: 0.72rem;">
-                            Oyligi: <strong class="text-success">{{ item.course.author.get_salary_display }}</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4-blok: Narxi & Chegirma -->
-            <div style="width: 12%; text-align: right;">
-                {% if item.course.is_free %}
-                    <span class="badge bg-success fs-6 fw-bold px-2 py-1">BEPUL</span>
-                {% else %}
-                    {% if item.course.discount_price > 0 and item.course.price > item.course.discount_price %}
-                        <div class="text-muted small" style="text-decoration: line-through; font-size: 0.72rem;">
-                            {{ item.course.price|floatformat:0 }} so'm
-                        </div>
-                        <div class="fw-extrabold text-primary" style="font-size: 0.95rem;">
-                            {{ item.course.discount_price|floatformat:0 }} so'm
-                        </div>
-                    {% else %}
-                        <div class="fw-extrabold text-dark" style="font-size: 0.95rem;">
-                            {{ item.course.price|floatformat:0 }} so'm
-                        </div>
-                    {% endif %}
-                    {% if item.course.get_discount_percent > 0 %}
-                        <span class="badge bg-danger text-white fw-bold px-1.5 py-0.5 rounded-pill" style="font-size: 0.65rem;">
-                            -{{ item.course.get_discount_percent }}%
-                        </span>
-                    {% endif %}
-                {% endif %}
-            </div>
-
-            <!-- 5-blok: Ko'rish Tugmasi -->
-            <div style="width: 8%; text-align: right;">
-                <button class="btn btn-sm btn-outline-warning text-dark fw-bold rounded-pill px-3 py-1 shadow-xs" style="white-space: nowrap;">
-                    Ko'rish &rarr;
+                <button id="viewListBtn" class="view-switch-btn btn-light text-muted" onclick="switchCourseView('list')">
+                    <i class="fa-solid fa-bars me-1"></i> Ro'yxat
                 </button>
             </div>
+
+            <button type="button" class="btn btn-outline-danger btn-sm fw-bold rounded-pill px-3 py-1.5" data-bs-toggle="modal" data-bs-target="#globalDiscountsModal">
+                <i class="fa-solid fa-tags me-1"></i> Paket (-50k / -100k)
+            </button>
         </div>
+    </div>
 
-        <!-- =============================================================== -->
-        <!-- 🌟 TO'GARAK POP-UP MODALI (Bosilganda Barchasi Chiqadigan Oyna)  -->
-        <!-- =============================================================== -->
-        <div class="modal fade" id="courseModal{{ item.course.id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-                    
-                    <!-- Modal Banner -->
-                    <div class="course-modal-banner" style="background-image: url('{{ item.course.thumbnail_url|default:'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800' }}');">
-                        <div class="course-modal-banner-overlay">
-                            <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
-                            <div class="d-flex flex-wrap gap-2 mb-2">
-                                <span class="badge bg-primary px-3 py-1 rounded-pill fw-bold">{{ item.course.category }}</span>
-                                <span class="badge bg-success px-3 py-1 rounded-pill fw-bold"><i class="fa-solid fa-calendar-check me-1"></i> Ertadan boshlanadi</span>
-                                {% if item.course.is_modern_profession %}
-                                    <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-extrabold shadow-sm"><i class="fa-solid fa-bolt me-1"></i> Zamonaviy Qimmat Kasb</span>
-                                {% endif %}
-                            </div>
-                            <h3 class="fw-extrabold text-white mb-0 drop-shadow-title">{{ item.course.title }}</h3>
-                        </div>
-                    </div>
-
-                    <!-- Modal Body -->
-                    <div class="modal-body p-4">
-                        
-                        <!-- Dars Jadvali & Mas'ul Ustoz -->
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-7">
-                                <div class="p-3 bg-light rounded-3 border h-100">
-                                    <h6 class="fw-bold text-dark mb-2">
-                                        <i class="fa-regular fa-clock text-primary me-2"></i> Dars Kunlari va Vaqti:
-                                    </h6>
-                                    <div class="fw-bold text-primary mb-1">{{ item.course.get_schedule_display_full }}</div>
-                                    <small class="text-success fw-semibold">
-                                        <i class="fa-solid fa-circle-check me-1"></i> Hoziroq ro'yxatdan o'tib, ertadan mashg'ulotlarni boshlash mumkin
-                                    </small>
-                                </div>
-                            </div>
-                            <div class="col-md-5">
-                                <div class="p-3 bg-light rounded-3 border h-100 d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <img src="{{ item.course.author.avatar_url|default:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500' }}" 
-                                             alt="{{ item.course.author.get_full_name }}" 
-                                             class="rounded-3 object-fit-cover shadow-sm border" 
-                                             style="width: 52px; height: 52px;">
-                                        <div>
-                                            <small class="text-muted d-block" style="font-size: 0.72rem;">Katta Murabbiy</small>
-                                            <div class="fw-bold text-dark">{{ item.course.author.get_full_name }}</div>
-                                            <small class="text-success fw-bold">Oyligi: {{ item.course.author.get_salary_display }}</small>
-                                        </div>
-                                    </div>
-                                    <a href="{% url 'teachers_list' %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Ustoz profili">
-                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- To'garak Haqida Batafsil -->
-                        <div class="mb-4">
-                            <h6 class="fw-bold text-dark mb-2">
-                                <i class="fa-solid fa-circle-info text-info me-2"></i> To'garak Haqida:
-                            </h6>
-                            <p class="text-muted small mb-0" style="line-height: 1.7;">
-                                {{ item.course.description }}
-                            </p>
-                        </div>
-
-                        <!-- Modullar va Darslar Statistikasi -->
-                        <div class="row g-2 mb-4">
-                            <div class="col-4">
-                                <div class="p-2.5 bg-light text-center rounded-3 border">
-                                    <div class="text-muted small" style="font-size: 0.75rem;">Jami Darslar</div>
-                                    <div class="fw-bold text-primary">{{ item.total_lessons }} ta</div>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="p-2.5 bg-light text-center rounded-3 border">
-                                    <div class="text-muted small" style="font-size: 0.75rem;">Viktorinalar</div>
-                                    <div class="fw-bold text-warning">{{ item.total_quizzes }} ta</div>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="p-2.5 bg-light text-center rounded-3 border">
-                                    <div class="text-muted small" style="font-size: 0.75rem;">Sertifikat</div>
-                                    <div class="fw-bold text-success">Mavjud (QR)</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Narx Bloki (Xuddi Skrinshotdagi format) -->
-                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mb-2" style="background-color: #f8fafc; border: 1.5px dashed #cbd5e1;">
-                            <div>
-                                {% if item.course.is_free %}
-                                    <span class="badge bg-success fs-5 fw-bold px-3 py-1">BEPUL</span>
-                                {% else %}
-                                    {% if item.course.discount_price > 0 and item.course.price > item.course.discount_price %}
-                                        <div class="text-muted small" style="text-decoration: line-through;">
-                                            {{ item.course.price|floatformat:0 }} so'm
-                                        </div>
-                                        <div class="fw-extrabold text-primary fs-3">
-                                            {{ item.course.discount_price|floatformat:0 }} so'm
-                                        </div>
-                                    {% else %}
-                                        <div class="fw-extrabold text-dark fs-3">
-                                            {{ item.course.price|floatformat:0 }} so'm
-                                        </div>
-                                    {% endif %}
-                                {% endif %}
-                                <small class="text-muted d-block" style="font-size: 0.75rem;">oylik to'garak to'lovi</small>
-                            </div>
-
-                            {% if not item.course.is_free and item.course.get_discount_percent > 0 %}
-                                <span class="badge bg-danger text-white fw-bold px-3 py-2 rounded-pill fs-6">
-                                    -{{ item.course.get_discount_percent }}% CHEGIRMA
-                                </span>
-                            {% endif %}
-                        </div>
-
-                    </div>
-
-                    <!-- Modal Footer (Sariq Katta Tugma) -->
-                    <div class="modal-footer bg-light border-0 p-3 d-flex justify-content-between">
-                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Yopish</button>
-                        
-                        {% if item.is_enrolled or item.course.is_free %}
-                            {% if item.first_lesson %}
-                                <a href="{% url 'classroom' item.first_lesson.id %}" class="btn btn-primary-custom fw-bold rounded-pill px-4 shadow">
-                                    <i class="fa-solid fa-graduation-cap me-1"></i> Darslarga Kirish
-                                </a>
-                            {% else %}
-                                <button class="btn btn-secondary rounded-pill px-4" disabled>Darslar kutilmoqda</button>
-                            {% endif %}
+    {% if query and matched_teachers %}
+    <!-- 👨‍🏫 Qidiruv bo'yicha topilgan ustozlar bloki -->
+    <div class="card border-0 rounded-4 p-3.5 mb-4 shadow-xs" style="background: linear-gradient(135deg, #eef2ff, #f8fafc); border-left: 5px solid #4f46e5 !important;">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-chalkboard-user text-primary fs-5"></i>
+                <span>"{{ query }}" bo'yicha topilgan O'qituvchilar:</span>
+            </h6>
+            <a href="{% url 'teachers_list' %}?q={{ query }}" class="small fw-bold text-primary text-decoration-none">
+                Barcha ustozlar &rarr;
+            </a>
+        </div>
+        <div class="row g-2.5">
+            {% for t in matched_teachers %}
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 rounded-3 p-2.5 bg-white shadow-2xs h-100 d-flex flex-row align-items-center gap-2.5">
+                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; font-weight: bold; font-size: 1.2rem;">
+                        {% if t.avatar %}
+                            <img src="{{ t.avatar.url }}" class="rounded-circle w-100 h-100 object-fit-cover">
                         {% else %}
-                            <a href="{% url 'checkout' item.course.id %}" class="btn btn-warning fw-extrabold rounded-pill px-4 py-2.5 shadow d-flex align-items-center gap-2">
-                                <i class="fa-solid fa-user-plus"></i>
-                                <span>To'garakka Qatnashish (Ertadan Boshlash)</span>
-                            </a>
+                            👨‍🏫
                         {% endif %}
                     </div>
-
+                    <div class="min-w-0 flex-grow-1">
+                        <div class="fw-bold text-dark small text-truncate">{{ t.get_full_name|default:t.username }}</div>
+                        <div class="text-muted text-truncate" style="font-size: 0.72rem;">{{ t.headline|default:t.specialties|default:"Professional Ustoz" }}</div>
+                    </div>
+                    <a href="{% url 'teachers_list' %}?q={{ t.first_name|default:t.username }}" class="btn btn-outline-primary btn-sm rounded-pill py-1 px-2.5 flex-shrink-0" title="Ustozning to'liq ma'lumotlari">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
             </div>
+            {% endfor %}
         </div>
+    </div>
+    {% endif %}
+
+    <!-- =================================================================== -->
+    <!-- 🌟 ASOSIY KO'RINISh: MOHIRDEV USLUBIDAGI TO'RTBURCHAK RASMLI GRID     -->
+    <!-- =================================================================== -->
+    <div id="coursesGridView" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4 mb-5">
+        {% for item in courses_data %}
+            <div class="col course-item-col" data-category="{{ item.course.category }}" data-schedule="{{ item.course.schedule_type }}">
+                <!-- MOHIRDEV USLUBIDAGI MINIMALIST KARTA (Faqat to'rtburchak rasm va fan nomi) -->
+                <div class="mohir-card" data-bs-toggle="modal" data-bs-target="#courseModal{{ item.course.id }}" title="{{ item.course.title }} — Batafsil ma'lumotni ko'rish">
+                    <!-- To'rtburchak Rasm (16:9) -->
+                    <div class="mohir-thumb-wrap">
+                        <img src="{{ item.course.thumbnail_url|default:'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600' }}" 
+                             alt="{{ item.course.title }}" 
+                             class="mohir-thumb-img">
+                    </div>
+
+                    <!-- Rasm ostida faqat Fan Nomi -->
+                    <div class="p-3 text-center d-flex align-items-center justify-content-center bg-white" style="min-height: 72px;">
+                        <h6 class="fw-bold mb-0 text-dark fs-6" style="line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ item.course.title }}
+                        </h6>
+                    </div>
+                </div>
+            </div>
         {% empty %}
-        <div class="text-center py-5 text-muted">
-            <i class="fa-solid fa-shapes fa-3x mb-3 text-secondary"></i>
-            <h5>To'garaklar topilmadi</h5>
-            <p class="small">Tanlangan parametrlar bo'yicha to'garak mavjud emas. Filtrlarni tozalang.</p>
-            <a href="{% url 'course_list' %}" class="btn btn-outline-primary btn-sm rounded-pill">Barcha to'garaklarni ko'rish</a>
-        </div>
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="fa-solid fa-magnifying-glass fa-3x mb-3 text-secondary"></i>
+                <h5>To'garaklar topilmadi</h5>
+                <p class="small">Kiritilgan qidiruv yoki tanlangan filtr bo'yicha to'garak mavjud emas.</p>
+                <a href="{% url 'course_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1.5">Barcha to'garaklarni ko'rish</a>
+            </div>
         {% endfor %}
+
+        <!-- Dinamik Filtrlashda Topilmaganda Chiqadigan Blok -->
+        <div id="noResultsBox" class="col-12 text-center py-5 text-muted w-100" style="display: none;">
+            <i class="fa-solid fa-filter-circle-xmark fa-3x mb-3 text-secondary"></i>
+            <h5>Ushbu yo'nalishda to'garaklar topilmadi</h5>
+            <p class="small">Boshqa soha yoki kunlarni tanlab ko'ring.</p>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1.5" onclick="applyInstantCategory('Barchasi', document.querySelector('.filter-pill'))">
+                Barcha to'garaklarni ko'rsatish
+            </button>
+        </div>
     </div>
 
     <!-- =================================================================== -->
-    <!-- 🔲 AN'ANAVIY KATAKLAR (GRID) KO'RINISHI (TOGGLEABLE)               -->
+    <!-- 📋 IXCHAM RO'YXAT KO'RINIShI (Ixtiyoriy almashtirilsa)             -->
     <!-- =================================================================== -->
-    <div id="coursesGridView" class="row g-4 mb-5 d-none">
+    <div id="coursesCompactView" class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-5 d-none">
+        <div class="d-flex justify-content-between align-items-center px-2 py-2 mb-2 border-bottom text-muted small fw-bold text-uppercase">
+            <span style="width: 40%;">To'garak & Yo'nalish</span>
+            <span class="d-none d-md-inline" style="width: 25%;">Dars Jadvali & Boshlanish</span>
+            <span class="d-none d-lg-inline" style="width: 20%;">Murabbiy</span>
+            <span style="width: 15%; text-align: right;">To'garak Narxi</span>
+        </div>
+
         {% for item in courses_data %}
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden d-flex flex-column" style="transition: transform 0.2s ease, box-shadow 0.2s ease; background: #ffffff;">
-                    
-                    <!-- Kartochka Tepasi -->
-                    <div class="p-4" style="background: linear-gradient(135deg, #f8fafc, #eef2ff); border-bottom: 1px solid #e2e8f0;">
-                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-1 mb-2">
-                            <span class="badge bg-primary-subtle text-primary fw-semibold px-2.5 py-1 rounded-pill small">
+            <div class="course-compact-row" data-bs-toggle="modal" data-bs-target="#courseModal{{ item.course.id }}">
+                <div class="d-flex align-items-center gap-3" style="width: 40%; min-width: 230px;">
+                    <img src="{{ item.course.thumbnail_url|default:'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=500' }}" 
+                         alt="{{ item.course.title }}" 
+                         class="course-mini-thumb">
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-dark text-truncate" title="{{ item.course.title }}">
+                            {{ item.course.title }}
+                        </div>
+                        <div class="small text-muted text-truncate" style="font-size: 0.78rem;">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0.5">
                                 {{ item.course.category }}
                             </span>
-                            
-                            <span class="badge bg-success-subtle text-success fw-bold px-2.5 py-1 rounded-pill small border border-success-subtle">
-                                <i class="fa-solid fa-calendar-check me-1"></i> Ertadan boshlanadi
-                            </span>
+                            &bull; {{ item.total_lessons }} ta dars
                         </div>
+                    </div>
+                </div>
 
-                        {% if item.course.is_modern_profession %}
-                            <div class="mb-2">
-                                <span class="badge bg-warning text-dark fw-extrabold px-2.5 py-1 rounded-pill shadow-xs" style="font-size: 0.75rem;">
-                                    <i class="fa-solid fa-bolt me-1"></i> Zamonaviy Qimmat Kasb
-                                </span>
+                <div class="d-none d-md-block" style="width: 25%;">
+                    <div class="small fw-semibold text-dark text-truncate">
+                        <i class="fa-regular fa-clock text-primary me-1"></i> {{ item.course.get_schedule_display_full }}
+                    </div>
+                    <div class="text-success small fw-semibold" style="font-size: 0.75rem;">
+                        <i class="fa-solid fa-calendar-check me-1"></i> Ertadan boshlanadi
+                    </div>
+                </div>
+
+                <div class="d-none d-lg-block" style="width: 20%;">
+                    <div class="fw-bold text-dark text-truncate small">{{ item.course.author.get_full_name }}</div>
+                    <div class="text-muted small" style="font-size: 0.72rem;">Katta Murabbiy</div>
+                </div>
+
+                <div style="width: 15%; text-align: right;">
+                    {% if item.course.is_free %}
+                        <span class="badge bg-success fw-bold px-2 py-1">BEPUL</span>
+                    {% else %}
+                        {% if item.course.discount_price > 0 and item.course.price > item.course.discount_price %}
+                            <div class="fw-bold text-primary" style="font-size: 0.95rem;">
+                                {{ item.course.discount_price|floatformat:0 }} so'm
+                            </div>
+                        {% else %}
+                            <div class="fw-bold text-dark" style="font-size: 0.95rem;">
+                                {{ item.course.price|floatformat:0 }} so'm
                             </div>
                         {% endif %}
-
-                        <h5 class="card-title fw-bold text-dark mb-2" style="min-height: 52px; line-height: 1.35;">{{ item.course.title }}</h5>
-
-                        <!-- Kunlar va Vaqti -->
-                        <div class="small text-secondary fw-semibold mb-2">
-                            <i class="fa-regular fa-clock text-primary me-1"></i> {{ item.course.get_schedule_display_full }}
-                        </div>
-
-                        <!-- Muallif O'qituvchi va Oyligi -->
-                        <div class="d-flex align-items-center justify-content-between pt-2 border-top">
-                            <div class="d-flex align-items-center gap-2">
-                                <img src="{{ item.course.author.avatar_url|default:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500' }}" alt="{{ item.course.author.get_full_name }}" class="rounded-circle object-fit-cover border" style="width: 32px; height: 32px;">
-                                <div>
-                                    <small class="d-block text-dark fw-bold" style="font-size: 0.8rem;">
-                                        {{ item.course.author.get_full_name }}
-                                    </small>
-                                    <small class="text-muted" style="font-size: 0.7rem;">
-                                        Oyligi: <strong class="text-success">{{ item.course.author.get_salary_display }}</strong>
-                                    </small>
-                                </div>
-                            </div>
-                            <a href="{% url 'teachers_list' %}" class="small text-primary text-decoration-none" title="O'qituvchi profilini ko'rish">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Kartochka Tanasi -->
-                    <div class="card-body p-4 d-flex flex-column justify-content-between">
-                        <p class="card-text text-muted small mb-3" style="line-height: 1.6;">
-                            {{ item.course.description|truncatewords:20 }}
-                        </p>
-
-                        <!-- Narx Bloki -->
-                        <div class="d-flex justify-content-between align-items-center mb-3 p-2.5 rounded-3" style="background-color: #f8fafc; border: 1px dashed #cbd5e1;">
-                            <div>
-                                {% if item.course.is_free %}
-                                    <span class="badge bg-success fs-6 fw-bold px-2.5 py-1">BEPUL</span>
-                                {% else %}
-                                    {% if item.course.discount_price > 0 and item.course.price > item.course.discount_price %}
-                                        <div class="text-muted small" style="text-decoration: line-through;">
-                                            {{ item.course.price|floatformat:0 }} so'm
-                                        </div>
-                                        <div class="fw-bold text-primary fs-5">
-                                            {{ item.course.discount_price|floatformat:0 }} so'm
-                                        </div>
-                                    {% else %}
-                                        <div class="fw-bold text-dark fs-5">
-                                            {{ item.course.price|floatformat:0 }} so'm
-                                        </div>
-                                    {% endif %}
-                                {% endif %}
-                                <small class="text-muted" style="font-size: 0.72rem;">oylik to'garak to'lovi</small>
-                            </div>
-
-                            {% if not item.course.is_free and item.course.get_discount_percent > 0 %}
-                                <span class="badge bg-danger text-white fw-bold px-2 py-1 rounded-pill">
-                                    -{{ item.course.get_discount_percent }}% CHEGIRMA
-                                </span>
-                            {% endif %}
-                        </div>
-
-                        <!-- Tugma: Qatnashish yoki Darslarga kirish -->
-                        <div>
-                            {% if item.is_enrolled or item.course.is_free %}
-                                {% if item.first_lesson %}
-                                    <a href="{% url 'classroom' item.first_lesson.id %}" class="btn btn-primary-custom w-100 py-2.5 fw-bold shadow-sm">
-                                        <i class="fa-solid fa-graduation-cap me-1"></i> Darslarga Kirish
-                                    </a>
-                                {% else %}
-                                    <button class="btn btn-secondary w-100 py-2.5" disabled>Darslar kutilmoqda</button>
-                                {% endif %}
-                            {% else %}
-                                <a href="{% url 'checkout' item.course.id %}" class="btn btn-warning w-100 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2">
-                                    <i class="fa-solid fa-user-plus"></i>
-                                    <span>To'garakka Qatnashish (Ertadan Boshlash)</span>
-                                </a>
-                            {% endif %}
-                        </div>
-
-                    </div>
+                    {% endif %}
                 </div>
             </div>
         {% endfor %}
     </div>
 
 </div>
+
+<!-- =================================================================== -->
+<!-- 🪟 BARCHA KURSLAR UCHUN BATAFSIL MA'LUMOT MODALLARI                 -->
+<!-- =================================================================== -->
+<div id="allCourseModals">
+    {% for item in courses_data %}
+    <div class="modal fade" id="courseModal{{ item.course.id }}" tabindex="-1" aria-labelledby="courseModalLabel{{ item.course.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                
+                <!-- Modal Banner -->
+                <div class="course-modal-banner" style="background-image: url('{{ item.course.thumbnail_url|default:'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800' }}');">
+                    <div class="course-modal-banner-overlay">
+                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <span class="badge bg-primary px-3 py-1 rounded-pill fw-bold">{{ item.course.category }}</span>
+                            <span class="badge bg-success px-3 py-1 rounded-pill fw-bold"><i class="fa-solid fa-calendar-check me-1"></i> Ertadan boshlanadi</span>
+                            {% if item.course.is_modern_profession %}
+                                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-extrabold shadow-sm"><i class="fa-solid fa-bolt me-1"></i> Zamonaviy Qimmat Kasb</span>
+                            {% endif %}
+                        </div>
+                        <h3 class="fw-extrabold text-white mb-0 drop-shadow-title" id="courseModalLabel{{ item.course.id }}">{{ item.course.title }}</h3>
+                    </div>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body p-4">
+                    
+                    <!-- Dars Jadvali & Mas'ul Ustoz -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-7">
+                            <div class="p-3 bg-light rounded-3 border h-100">
+                                <h6 class="fw-bold text-dark mb-2">
+                                    <i class="fa-regular fa-clock text-primary me-2"></i> Dars Kunlari va Vaqti:
+                                </h6>
+                                <div class="fw-bold text-primary mb-1">{{ item.course.get_schedule_display_full }}</div>
+                                <small class="text-success fw-semibold">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Hoziroq ro'yxatdan o'tib, ertadan mashg'ulotlarni boshlash mumkin
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="p-3 bg-light rounded-3 border h-100 d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="{{ item.course.author.avatar_url|default:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500' }}" 
+                                         alt="{{ item.course.author.get_full_name }}" 
+                                         class="rounded-3 object-fit-cover shadow-sm border" 
+                                         style="width: 52px; height: 52px;">
+                                    <div>
+                                        <small class="text-muted d-block" style="font-size: 0.72rem;">Katta Murabbiy</small>
+                                        <div class="fw-bold text-dark">{{ item.course.author.get_full_name }}</div>
+                                        {% if user.is_staff or user == item.course.author %}
+                                            <small class="text-success fw-bold">Oyligi: {{ item.course.author.get_salary_display }}</small>
+                                        {% else %}
+                                            <small class="text-primary fw-semibold"><i class="fa-solid fa-certificate me-1"></i> Malakali Murabbiy</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <a href="{% url 'teachers_list' %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Ustoz profili">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- To'garak Haqida Batafsil -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-2">
+                            <i class="fa-solid fa-circle-info text-info me-2"></i> To'garak Haqida:
+                        </h6>
+                        <p class="text-muted small mb-0" style="line-height: 1.7;">
+                            {{ item.course.description }}
+                        </p>
+                    </div>
+
+                    <!-- Modullar va Darslar Statistikasi -->
+                    <div class="row g-2 mb-4">
+                        <div class="col-4">
+                            <div class="p-2.5 bg-light text-center rounded-3 border">
+                                <div class="text-muted small" style="font-size: 0.75rem;">Jami Darslar</div>
+                                <div class="fw-bold text-primary">{{ item.total_lessons }} ta</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2.5 bg-light text-center rounded-3 border">
+                                <div class="text-muted small" style="font-size: 0.75rem;">Viktorinalar</div>
+                                <div class="fw-bold text-warning">{{ item.total_quizzes }} ta</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2.5 bg-light text-center rounded-3 border">
+                                <div class="text-muted small" style="font-size: 0.75rem;">Sertifikat</div>
+                                <div class="fw-bold text-success">Mavjud (QR)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Narx Bloki -->
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3 mb-2" style="background-color: #f8fafc; border: 1.5px dashed #cbd5e1;">
+                        <div>
+                            {% if item.course.is_free %}
+                                <span class="badge bg-success fs-5 fw-bold px-3 py-1">BEPUL</span>
+                            {% else %}
+                                {% if item.course.discount_price > 0 and item.course.price > item.course.discount_price %}
+                                    <div class="text-muted small" style="text-decoration: line-through;">
+                                        {{ item.course.price|floatformat:0 }} so'm
+                                    </div>
+                                    <div class="fw-extrabold text-primary fs-3">
+                                        {{ item.course.discount_price|floatformat:0 }} so'm
+                                    </div>
+                                {% else %}
+                                    <div class="fw-extrabold text-dark fs-3">
+                                        {{ item.course.price|floatformat:0 }} so'm
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">oylik to'garak to'lovi</small>
+                        </div>
+
+                        {% if not item.course.is_free and item.course.get_discount_percent > 0 %}
+                            <span class="badge bg-danger text-white fw-bold px-3 py-2 rounded-pill fs-6">
+                                -{{ item.course.get_discount_percent }}% CHEGIRMA
+                            </span>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer bg-light border-0 p-3 d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Yopish</button>
+                    
+                    {% if item.is_enrolled or item.course.is_free %}
+                        {% if item.first_lesson %}
+                            <a href="{% url 'classroom' item.first_lesson.id %}" class="btn btn-primary-custom fw-bold rounded-pill px-4 shadow">
+                                <i class="fa-solid fa-graduation-cap me-1"></i> Darslarga Kirish
+                            </a>
+                        {% else %}
+                            <button class="btn btn-secondary rounded-pill px-4" disabled>Darslar kutilmoqda</button>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'checkout' item.course.id %}" class="btn btn-warning fw-extrabold rounded-pill px-4 py-2.5 shadow d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>To'garakka Qatnashish (Ertadan Boshlash)</span>
+                        </a>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // =========================================================================
+    // ⚡ INSTANT FILTRLASH (SAHIFA QAYTA YUKLANMAYDI, OQARIB MILTILLAMAYDI)
+    // =========================================================================
+    let currentCategory = '{{ selected_category|default:"Barchasi" }}';
+    let currentSchedule = '{{ selected_schedule|default:"Barchasi" }}';
+
+    function runCourseFilter() {
+        const gridItems = document.querySelectorAll('#coursesGridView .course-item-col');
+        let visibleCount = 0;
+
+        gridItems.forEach(el => {
+            const cat = (el.getAttribute('data-category') || '').trim().toLowerCase();
+            const sched = (el.getAttribute('data-schedule') || '').trim().toLowerCase();
+
+            const targetCat = currentCategory.trim().toLowerCase();
+            const targetSched = currentSchedule.trim().toLowerCase();
+
+            const matchCat = (targetCat === 'barchasi' || targetCat === '' || cat === targetCat);
+            const matchSched = (targetSched === 'barchasi' || targetSched === '' || sched === targetSched);
+
+            if (matchCat && matchSched) {
+                el.style.display = '';
+                visibleCount++;
+            } else {
+                el.style.display = 'none';
+            }
+        });
+
+        const noResults = document.getElementById('noResultsBox');
+        if (noResults) {
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        const headingEl = document.getElementById('catalogHeading');
+        if (headingEl) {
+            headingEl.textContent = (currentCategory && currentCategory !== 'Barchasi') 
+                ? currentCategory 
+                : 'Barcha Mavjud Kurslar va To\'garaklar';
+        }
+    }
+
+    function applyInstantCategory(cat, btn) {
+        currentCategory = cat;
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        runCourseFilter();
+    }
+
+    function applyInstantSchedule(sched, btn) {
+        currentSchedule = sched;
+        document.querySelectorAll('.schedule-pill').forEach(p => p.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        runCourseFilter();
+    }
+
     function switchCourseView(mode) {
         const compactView = document.getElementById('coursesCompactView');
         const gridView = document.getElementById('coursesGridView');
         const listBtn = document.getElementById('viewListBtn');
         const gridBtn = document.getElementById('viewGridBtn');
 
-        if (mode === 'grid') {
+        if (mode === 'list') {
+            gridView.classList.add('d-none');
+            compactView.classList.remove('d-none');
+
+            listBtn.classList.remove('btn-light', 'text-muted');
+            listBtn.classList.add('btn-dark');
+
+            gridBtn.classList.remove('btn-dark');
+            gridBtn.classList.add('btn-light', 'text-muted');
+            localStorage.setItem('courseViewPreference', 'list');
+        } else {
             compactView.classList.add('d-none');
             gridView.classList.remove('d-none');
 
@@ -598,23 +917,50 @@
             listBtn.classList.remove('btn-dark');
             listBtn.classList.add('btn-light', 'text-muted');
             localStorage.setItem('courseViewPreference', 'grid');
-        } else {
-            compactView.classList.remove('d-none');
-            gridView.classList.add('d-none');
-
-            listBtn.classList.remove('btn-light', 'text-muted');
-            listBtn.classList.add('btn-dark');
-
-            gridBtn.classList.remove('btn-dark');
-            gridBtn.classList.add('btn-light', 'text-muted');
-            localStorage.setItem('courseViewPreference', 'list');
         }
     }
 
-    // Apply saved preference on page load if set
+    // =========================================================================
+    // 🚀 INNOVATSION HERO SLAYDERI (HAR 3.5 SONIYADA SILLIQ ALMASHINADI)
+    // =========================================================================
+    let currentHeroSlideIdx = 0;
+    let heroSliderTimer = null;
+
+    function showHeroSlide(index) {
+        const slides = document.querySelectorAll('.hero-slide');
+        const dots = document.querySelectorAll('.slider-dot');
+        if (!slides.length) return;
+
+        currentHeroSlideIdx = (index + slides.length) % slides.length;
+        slides.forEach((s, i) => {
+            s.classList.toggle('active', i === currentHeroSlideIdx);
+        });
+        dots.forEach((d, i) => {
+            d.classList.toggle('active', i === currentHeroSlideIdx);
+        });
+    }
+
+    function jumpToHeroSlide(index) {
+        clearInterval(heroSliderTimer);
+        showHeroSlide(index);
+        startHeroSlider();
+    }
+
+    function startHeroSlider() {
+        if (heroSliderTimer) clearInterval(heroSliderTimer);
+        heroSliderTimer = setInterval(() => {
+            showHeroSlide(currentHeroSlideIdx + 1);
+        }, 3500);
+    }
+
+    // Default preference: Mohirdev Grid View & Slayderni ishga tushirish
     document.addEventListener('DOMContentLoaded', function() {
+        startHeroSlider();
+
         const savedView = localStorage.getItem('courseViewPreference');
-        if (savedView === 'grid') {
+        if (savedView === 'list') {
+            switchCourseView('list');
+        } else {
             switchCourseView('grid');
         }
     });
